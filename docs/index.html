@@ -1,0 +1,2071 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signet — Cryptographic compliance rails for agentic finance on XRPL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════════
+   SIGNET — PITCH DECK
+   Arrow keys / space to navigate. F for fullscreen.
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+  --bg:        #0B0A09;
+  --bg-elev:   #141311;
+  --ink:       #F2EDE4;
+  --ink-mid:   #A8A39B;
+  --ink-dim:   #6D6A64;
+  --accent:    #D97757;
+  --accent-dim:#9E5A41;
+  --accent-wash: rgba(217, 119, 87, 0.08);
+  --rule:      rgba(242, 237, 228, 0.10);
+  --rule-strong: rgba(242, 237, 228, 0.22);
+  --critical:  #C84E3A;
+  --good:      #7CA877;
+
+  --font-display: "Fraunces", "Times New Roman", serif;
+  --font-body:    "Instrument Sans", -apple-system, sans-serif;
+  --font-mono:    "JetBrains Mono", "SF Mono", Menlo, monospace;
+
+  --slide-pad-x: 5rem;
+  --slide-pad-y: 3rem;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Grain texture overlay */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+/* ─── Chrome ──────────────────────────────────────────────────── */
+
+.chrome-progress {
+  position: fixed; top: 0; left: 0;
+  height: 1px; width: 0%;
+  background: var(--accent);
+  z-index: 50;
+  transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.chrome-top, .chrome-bottom {
+  position: fixed;
+  left: var(--slide-pad-x);
+  right: var(--slide-pad-x);
+  z-index: 40;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+}
+
+.chrome-top { top: 1rem; }
+.chrome-bottom { bottom: 1rem; }
+
+.chrome-mark {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 14px;
+  font-variation-settings: "opsz" 14;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: var(--ink);
+}
+.chrome-mark::before {
+  content: "§";
+  color: var(--accent);
+  margin-right: 0.35em;
+  font-weight: 400;
+}
+
+.chrome-counter .current { color: var(--accent); }
+
+.help-overlay {
+  position: fixed;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--ink-dim);
+  text-transform: uppercase;
+  pointer-events: none;
+  opacity: 0.55;
+  white-space: nowrap;
+}
+.help-overlay kbd {
+  border: 1px solid var(--rule-strong);
+  padding: 2px 6px;
+  margin: 0 2px;
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-mid);
+}
+
+/* ─── Slide container ─────────────────────────────────────────── */
+
+.deck {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  padding: calc(var(--slide-pad-y) + 1rem) var(--slide-pad-x) calc(var(--slide-pad-y) + 1.25rem);
+  display: none;
+  flex-direction: column;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: hidden;
+  min-height: 0;
+}
+
+.slide.active {
+  display: flex;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ─── Typography ──────────────────────────────────────────────── */
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 1rem;
+}
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 1.04;
+  letter-spacing: -0.022em;
+  color: var(--ink);
+}
+
+.display-xxl { font-size: clamp(3.5rem, 7.5vw, 6.5rem); font-variation-settings: "opsz" 144; }
+.display-xl  { font-size: clamp(2.5rem, 5vw, 4.25rem); font-variation-settings: "opsz" 96; line-height: 1.05; }
+.display-lg  { font-size: clamp(2rem, 3.6vw, 3.25rem); font-variation-settings: "opsz" 72; line-height: 1.1; }
+.display-md  { font-size: clamp(1.5rem, 2.4vw, 2rem); font-variation-settings: "opsz" 36; line-height: 1.2; }
+
+.display em,
+.display .italic {
+  font-style: italic;
+  color: var(--accent);
+  font-weight: 400;
+}
+
+.lead {
+  font-size: clamp(1rem, 1.15vw, 1.0625rem);
+  line-height: 1.5;
+  color: var(--ink-mid);
+  max-width: 50rem;
+}
+
+.mono-label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.slide-title-block { margin-bottom: 1.25rem; }
+
+/* ═══════════════════════════════════════════════════════════════
+   §00 — COVER
+   ═══════════════════════════════════════════════════════════════ */
+
+.cover {
+  justify-content: center;
+  align-items: flex-start;
+  position: relative;
+}
+
+.cover::after {
+  content: "";
+  position: absolute;
+  right: var(--slide-pad-x);
+  top: 45%;
+  width: 1px;
+  height: 14%;
+  background: var(--accent);
+  transform: translateY(-50%);
+}
+
+.cover-wordmark {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-variation-settings: "opsz" 144;
+  font-size: clamp(6rem, 13vw, 12rem);
+  line-height: 0.9;
+  letter-spacing: -0.045em;
+  color: var(--ink);
+  margin-bottom: 1.25rem;
+}
+
+.cover-wordmark .dot { color: var(--accent); font-weight: 400; }
+
+.cover-tagline {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(1.25rem, 1.9vw, 1.65rem);
+  line-height: 1.3;
+  color: var(--ink-mid);
+  max-width: 44rem;
+  margin-bottom: 2.5rem;
+}
+
+.cover-meta {
+  display: grid;
+  grid-template-columns: 1.4fr 1.2fr 0.7fr;
+  gap: 3rem;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  border-top: 1px solid var(--rule);
+  padding-top: 1rem;
+  width: 100%;
+  max-width: 58rem;
+  align-items: start;
+}
+
+.cover-meta .meta-label {
+  display: block;
+  opacity: 0.55;
+  margin-bottom: 0.45rem;
+}
+
+.cover-meta .meta-names {
+  display: block;
+  color: var(--ink);
+  line-height: 1.85;
+}
+
+.cover-meta .meta-value {
+  color: var(--ink);
+  line-height: 1.5;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   §01 — TIMELINE
+   ═══════════════════════════════════════════════════════════════ */
+
+.timeline {
+  position: relative;
+  margin-top: 2.5rem;
+  padding-top: 1.75rem;
+  flex: 1;
+}
+
+.timeline-track {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rule-strong) 10%, var(--rule-strong) 90%, transparent);
+}
+
+.timeline-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3rem;
+}
+
+.timeline-node { position: relative; padding-top: 0.5rem; }
+
+.timeline-node::before {
+  content: "";
+  position: absolute;
+  top: -2.25rem;
+  left: 0;
+  width: 9px;
+  height: 9px;
+  background: var(--bg);
+  border: 1px solid var(--accent);
+  transform: rotate(45deg);
+}
+.timeline-node.node-critical::before { background: var(--accent); }
+
+.timeline-date {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.6rem;
+}
+
+.timeline-title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-variation-settings: "opsz" 36;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  margin-bottom: 0.6rem;
+}
+
+.timeline-body {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-mid);
+  max-width: 18rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   §02 — INCIDENTS (hero numbers layout)
+   ═══════════════════════════════════════════════════════════════ */
+
+.incidents-hero {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.5rem;
+  margin-top: 1.5rem;
+  flex: 1;
+  align-content: center;
+  border-top: 1px solid var(--rule-strong);
+  border-bottom: 1px solid var(--rule-strong);
+  padding: 2.5rem 0;
+}
+
+.incident-cell {
+  border-right: 1px solid var(--rule);
+  padding-right: 2.5rem;
+}
+.incident-cell:last-child { border-right: none; }
+
+.incident-loss {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-variation-settings: "opsz" 144;
+  font-size: clamp(3rem, 6vw, 5.25rem);
+  line-height: 1;
+  letter-spacing: -0.035em;
+  color: var(--critical);
+  margin-bottom: 1.25rem;
+}
+
+.incident-cell:nth-child(1) .incident-loss,
+.incident-cell:nth-child(2) .incident-loss { color: var(--accent); }
+
+.incident-name {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-variation-settings: "opsz" 36;
+  color: var(--ink);
+  line-height: 1.2;
+  margin-bottom: 0.3rem;
+}
+
+.incident-cause {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin-bottom: 0.5rem;
+}
+
+.incident-date {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+}
+
+.incident-quote-block {
+  margin-top: 1.5rem;
+  padding: 1.1rem 1.5rem;
+  border-left: 2px solid var(--accent);
+  background: var(--accent-wash);
+}
+
+.incident-quote {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.2rem;
+  font-variation-settings: "opsz" 36;
+  color: var(--ink);
+  line-height: 1.35;
+}
+
+.incident-quote-attr {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin-top: 0.6rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   §03 — REGULATORY STACK
+   ═══════════════════════════════════════════════════════════════ */
+
+.regstack {
+  display: flex;
+  flex-direction: column;
+  margin-top: 1rem;
+}
+
+.regrow {
+  display: grid;
+  grid-template-columns: 10rem 1fr;
+  gap: 2rem;
+  padding: 1.1rem 0;
+  border-bottom: 1px solid var(--rule);
+  align-items: baseline;
+}
+.regrow:first-child { border-top: 1px solid var(--rule); }
+
+.regrow-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.regrow-body {
+  font-size: 15.5px;
+  line-height: 1.45;
+  color: var(--ink-mid);
+}
+
+.regrow-body strong { color: var(--ink); font-weight: 500; }
+.regrow-body em { color: var(--accent); font-style: italic; }
+
+.penalty-panel {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--accent);
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+}
+
+.penalty-cell {
+  padding-right: 1.5rem;
+  border-right: 1px solid var(--rule);
+}
+.penalty-cell:last-child { border-right: none; }
+
+.penalty-cell .mono-label { margin-bottom: 0.5rem; }
+
+.penalty-amount {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-variation-settings: "opsz" 48;
+  color: var(--ink);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.35rem;
+}
+
+.penalty-context {
+  font-size: 12.5px;
+  color: var(--ink-mid);
+  line-height: 1.4;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   §04 — INSIGHT
+   ═══════════════════════════════════════════════════════════════ */
+
+.insight-slide { justify-content: center; }
+
+.insight-statement {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-variation-settings: "opsz" 144;
+  font-size: clamp(2.25rem, 4.8vw, 4.25rem);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  max-width: 58rem;
+  margin-bottom: 2.25rem;
+  margin-top: 1.25rem;
+}
+
+.insight-statement em { font-style: italic; color: var(--accent); }
+
+.insight-followup {
+  font-size: 1.0625rem;
+  line-height: 1.55;
+  color: var(--ink-mid);
+  max-width: 42rem;
+  border-top: 1px solid var(--rule-strong);
+  padding-top: 1.25rem;
+}
+
+.insight-followup strong { color: var(--ink); font-weight: 500; }
+
+/* ═══════════════════════════════════════════════════════════════
+   §05 — ARCHITECTURE
+   ═══════════════════════════════════════════════════════════════ */
+
+.arch-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+.arch-svg {
+  width: 100%;
+  max-height: 52vh;
+  display: block;
+}
+
+.arch-legend {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--rule);
+}
+
+.arch-legend-item {
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink-mid);
+}
+
+.arch-legend-item strong {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.4rem;
+  font-weight: 400;
+  display: block;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   §06 — TRANSACTION FLOW
+   ═══════════════════════════════════════════════════════════════ */
+
+.flow-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  flex: 1;
+  margin-top: 1rem;
+  border-top: 1px solid var(--rule-strong);
+  border-left: 1px solid var(--rule-strong);
+}
+
+.flow-step {
+  padding: 1.25rem 1.5rem;
+  border-right: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+}
+
+.flow-num {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+  margin-bottom: 0.75rem;
+}
+
+.flow-title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-variation-settings: "opsz" 36;
+  line-height: 1.2;
+  color: var(--ink);
+  margin-bottom: 0.6rem;
+  letter-spacing: -0.01em;
+}
+
+.flow-desc {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-mid);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   §07 — WHY XRPL
+   ═══════════════════════════════════════════════════════════════ */
+
+.primitives-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  flex: 1;
+  margin-top: 1rem;
+  border-top: 1px solid var(--rule-strong);
+  border-left: 1px solid var(--rule-strong);
+}
+
+.primitive {
+  padding: 1.5rem 1.75rem;
+  border-right: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+
+.primitive-name {
+  font-family: var(--font-display);
+  font-size: 1.65rem;
+  font-variation-settings: "opsz" 36;
+  line-height: 1.15;
+  color: var(--ink);
+  letter-spacing: -0.015em;
+  margin-bottom: 0.35rem;
+}
+
+.primitive-status {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--good);
+  margin-bottom: 0.85rem;
+}
+
+.primitive-detail {
+  font-size: 14px;
+  color: var(--ink-mid);
+  line-height: 1.5;
+}
+
+.primitive-detail code {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--accent);
+  background: var(--accent-wash);
+  padding: 1px 5px;
+  border-radius: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   §08 — ATTESTATION
+   ═══════════════════════════════════════════════════════════════ */
+
+.attest-pipeline {
+  margin-top: 1rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.attest-row {
+  display: grid;
+  grid-template-columns: 3rem 1.2fr 1fr 1fr;
+  gap: 1.5rem;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+.attest-row:first-child { border-top: 1px solid var(--rule-strong); }
+
+.attest-stage {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+}
+
+.attest-what {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-variation-settings: "opsz" 36;
+  color: var(--ink);
+  line-height: 1.25;
+}
+
+.attest-how {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--ink-mid);
+  line-height: 1.4;
+}
+
+.attest-where {
+  font-size: 13px;
+  color: var(--ink-dim);
+  line-height: 1.4;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   §09 — COMPETITIVE TABLE
+   ═══════════════════════════════════════════════════════════════ */
+
+.comp-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  flex: 1;
+}
+
+.comp-table th {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  text-align: left;
+  padding: 0 1rem 0.85rem 1rem;
+  border-bottom: 1px solid var(--accent);
+  white-space: nowrap;
+}
+.comp-table th:first-child { padding-left: 0; }
+.comp-table th.th-center { text-align: center; }
+
+.comp-table td {
+  padding: 0.95rem 1rem;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: middle;
+  font-size: 13.5px;
+  color: var(--ink-mid);
+}
+.comp-table td:first-child { padding-left: 0; }
+.comp-table td.td-center { text-align: center; }
+
+.comp-vendor {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  color: var(--ink);
+  display: block;
+}
+
+.cell-yes, .cell-no, .cell-partial {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 1px;
+}
+.cell-yes     { color: var(--good); border: 1px solid rgba(124, 168, 119, 0.3); }
+.cell-no      { color: var(--critical); border: 1px solid rgba(200, 78, 58, 0.3); }
+.cell-partial { color: var(--accent); border: 1px solid rgba(217, 119, 87, 0.3); }
+
+.comp-table tr.row-ours td {
+  background: var(--accent-wash);
+  border-bottom: 1px solid var(--accent);
+}
+
+.row-ours .comp-vendor {
+  color: var(--accent);
+  font-weight: 500;
+  font-style: italic;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   §10 — MARKET
+   ═══════════════════════════════════════════════════════════════ */
+
+.market-grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 3.5rem;
+  flex: 1;
+  margin-top: 0.5rem;
+}
+
+.tam-item { padding: 1.1rem 0; border-bottom: 1px solid var(--rule); }
+.tam-item:first-child { border-top: 1px solid var(--rule-strong); }
+
+.tam-label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.5rem;
+}
+
+.tam-value {
+  font-family: var(--font-display);
+  font-size: 1.85rem;
+  font-variation-settings: "opsz" 48;
+  line-height: 1.1;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  margin-bottom: 0.4rem;
+}
+
+.tam-value .growth {
+  color: var(--accent);
+  font-style: italic;
+  font-size: 1.25rem;
+}
+
+.tam-note { font-size: 13px; color: var(--ink-dim); line-height: 1.45; }
+
+.market-sidebar { padding-left: 2.5rem; border-left: 1px solid var(--rule); }
+
+.sidebar-stat { padding: 1rem 0; border-bottom: 1px solid var(--rule); }
+.sidebar-stat:first-child { border-top: 1px solid var(--rule); }
+
+.sidebar-stat-num {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-variation-settings: "opsz" 36;
+  color: var(--accent);
+  line-height: 1;
+  margin-bottom: 0.4rem;
+  letter-spacing: -0.02em;
+}
+
+.sidebar-stat-label { font-size: 13px; color: var(--ink-mid); line-height: 1.45; }
+
+/* ═══════════════════════════════════════════════════════════════
+   §11 — GO TO MARKET
+   ═══════════════════════════════════════════════════════════════ */
+
+.gtm-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3.5rem;
+  flex: 1;
+  margin-top: 1rem;
+  align-items: start;
+}
+
+.gtm-section-title {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--rule-strong);
+}
+
+.pricing-band {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.pricing-amount {
+  font-family: var(--font-display);
+  font-size: 2.75rem;
+  font-variation-settings: "opsz" 72;
+  line-height: 1;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+}
+
+.pricing-unit {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--ink-mid);
+  text-transform: uppercase;
+}
+
+.pricing-note {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink-mid);
+  max-width: 24rem;
+}
+
+.distribution-list { list-style: none; padding: 0; }
+
+.distribution-list li {
+  padding: 0.9rem 0;
+  border-bottom: 1px solid var(--rule);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
+  align-items: baseline;
+}
+.distribution-list li:first-child { border-top: 1px solid var(--rule); }
+
+.dist-name {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--ink);
+}
+.dist-name span {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  color: var(--ink-dim);
+  margin-top: 0.2rem;
+}
+
+.dist-amount {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--accent);
+  letter-spacing: 0.04em;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   §12 — COMPLIANCE FIT
+   ═══════════════════════════════════════════════════════════════ */
+
+.fit-table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; flex: 1; }
+
+.fit-table th {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  text-align: left;
+  padding: 0 0 0.85rem 0;
+  border-bottom: 1px solid var(--accent);
+}
+
+.fit-table td { padding: 0.8rem 0; vertical-align: top; border-bottom: 1px solid var(--rule); }
+
+.fit-obligation { width: 42%; padding-right: 2rem; }
+
+.fit-obligation .art {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.fit-obligation .desc { font-size: 13.5px; color: var(--ink); line-height: 1.4; }
+
+.fit-arrow {
+  width: 2rem;
+  color: var(--ink-dim);
+  font-family: var(--font-mono);
+  text-align: center;
+  padding-top: 0.1rem;
+}
+
+.fit-feature { padding-left: 1.5rem; font-size: 13.5px; color: var(--ink-mid); line-height: 1.45; }
+.fit-feature strong { color: var(--ink); font-weight: 500; }
+
+/* ═══════════════════════════════════════════════════════════════
+   §13 — LIMITATIONS
+   ═══════════════════════════════════════════════════════════════ */
+
+.limits-list { display: flex; flex-direction: column; margin-top: 1rem; flex: 1; justify-content: center; }
+
+.limit-item {
+  padding: 1.35rem 0;
+  border-bottom: 1px solid var(--rule);
+  display: grid;
+  grid-template-columns: 3rem 1fr;
+  gap: 1.5rem;
+}
+.limit-item:first-child { border-top: 1px solid var(--rule-strong); }
+
+.limit-num {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+  padding-top: 0.25rem;
+}
+
+.limit-head {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-variation-settings: "opsz" 36;
+  color: var(--ink);
+  line-height: 1.25;
+  margin-bottom: 0.4rem;
+  letter-spacing: -0.015em;
+}
+
+.limit-body {
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--ink-mid);
+  max-width: 48rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   §14 — ROADMAP
+   ═══════════════════════════════════════════════════════════════ */
+
+.roadmap {
+  margin-top: 1rem;
+  position: relative;
+  padding-top: 2.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.roadmap-track {
+  position: absolute;
+  top: 1.5rem;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent), var(--rule-strong));
+}
+
+.roadmap-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }
+
+.roadmap-col { position: relative; }
+
+.roadmap-col::before {
+  content: "";
+  position: absolute;
+  top: -1.15rem;
+  left: 0;
+  width: 7px;
+  height: 7px;
+  background: var(--accent);
+  transform: rotate(45deg);
+}
+.roadmap-col:not(:first-child)::before { background: var(--bg); border: 1px solid var(--accent); }
+
+.roadmap-period {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.6rem;
+}
+
+.roadmap-milestone {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-variation-settings: "opsz" 36;
+  color: var(--ink);
+  line-height: 1.25;
+  margin-bottom: 0.65rem;
+  letter-spacing: -0.01em;
+}
+
+.roadmap-detail { font-size: 13px; line-height: 1.5; color: var(--ink-mid); }
+
+.ask-panel {
+  margin-top: auto;
+  padding: 1.1rem 1.5rem;
+  border: 1px solid var(--accent);
+  display: grid;
+  grid-template-columns: 1.3fr 1fr 1.4fr;
+  gap: 2rem;
+  align-items: center;
+  background: var(--accent-wash);
+}
+
+.ask-label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.4rem;
+}
+
+.ask-primary {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-variation-settings: "opsz" 48;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.ask-plus {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--accent);
+  letter-spacing: 0.04em;
+}
+
+.ask-note { font-size: 13px; line-height: 1.5; color: var(--ink-mid); }
+
+/* ═══════════════════════════════════════════════════════════════
+   §15 — WHY NOW
+   ═══════════════════════════════════════════════════════════════ */
+
+.whynow { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+
+.whynow-statement {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 2.8vw, 2.4rem);
+  font-variation-settings: "opsz" 72;
+  line-height: 1.25;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  max-width: 54rem;
+  margin-bottom: 2.25rem;
+  margin-top: 1rem;
+}
+
+.whynow-statement em { color: var(--accent); font-style: italic; }
+
+.whynow-pillars {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--rule-strong);
+}
+
+.pillar-label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.8rem;
+}
+
+.pillar-body {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-variation-settings: "opsz" 24;
+  line-height: 1.35;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+
+.pillar-body em { color: var(--accent); font-style: italic; }
+
+/* ═══════════════════════════════════════════════════════════════
+   §16 — THANKS
+   ═══════════════════════════════════════════════════════════════ */
+
+.thanks { justify-content: center; align-items: flex-start; }
+
+.thanks-wordmark {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-variation-settings: "opsz" 144;
+  font-size: clamp(4.5rem, 9vw, 8rem);
+  line-height: 0.92;
+  letter-spacing: -0.04em;
+  color: var(--ink);
+  margin-bottom: 0.85rem;
+}
+.thanks-wordmark .dot { color: var(--accent); }
+
+.thanks-ask {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(1.3rem, 2.2vw, 1.75rem);
+  line-height: 1.25;
+  color: var(--ink-mid);
+  margin-bottom: 2rem;
+  max-width: 42rem;
+}
+
+.thanks-contact {
+  display: grid;
+  grid-template-columns: 1.4fr 1.2fr 0.7fr;
+  gap: 3rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  border-top: 1px solid var(--rule);
+  padding-top: 1.25rem;
+  max-width: 58rem;
+  width: 100%;
+  align-items: start;
+}
+
+.thanks-contact .meta-label {
+  display: block;
+  opacity: 0.55;
+  margin-bottom: 0.45rem;
+}
+
+.thanks-contact .meta-names {
+  display: block;
+  color: var(--ink);
+  line-height: 1.85;
+}
+
+.thanks-contact .meta-value {
+  color: var(--ink);
+  line-height: 1.5;
+}
+
+/* ─── Animations ──────────────────────────────────────────────── */
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.slide.active .eyebrow { animation: fadeInUp 0.45s cubic-bezier(0.22,1,0.36,1) 0.08s backwards; }
+.slide.active .display,
+.slide.active .display-xxl,
+.slide.active .display-xl,
+.slide.active .display-lg,
+.slide.active .display-md,
+.slide.active .insight-statement,
+.slide.active .whynow-statement { animation: fadeInUp 0.55s cubic-bezier(0.22,1,0.36,1) 0.14s backwards; }
+
+@media (max-width: 1100px) {
+  :root { --slide-pad-x: 3rem; --slide-pad-y: 2rem; }
+}
+
+</style>
+</head>
+<body>
+
+<div class="chrome-progress" id="progress"></div>
+
+<div class="chrome-top">
+  <span class="chrome-mark">Signet</span>
+  <span id="chrome-section">COVER</span>
+</div>
+<div class="chrome-bottom">
+  <span>Ripple-IE Blockchain · XRPL &amp; Policy Gateway Specialization · 2026</span>
+  <span class="chrome-counter"><span class="current" id="chrome-current">00</span> / <span id="chrome-total">16</span></span>
+</div>
+
+<div class="help-overlay">
+  <kbd>←</kbd><kbd>→</kbd> navigate &nbsp;·&nbsp; <kbd>F</kbd> fullscreen
+</div>
+
+<div class="deck" id="deck">
+
+  <!-- ═══════════════════════════════════════════════════════════
+       §00 — COVER
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="slide cover active" data-section="Cover">
+    <h1 class="cover-wordmark">Signet<span class="dot">.</span></h1>
+    <p class="cover-tagline">Cryptographic compliance rails<br>for agentic finance on XRPL.</p>
+    <div class="cover-meta">
+      <div class="meta-team">
+        <span class="meta-label">Team</span>
+        <span class="meta-names">Juan Diego Fernández Araujo</span>
+        <span class="meta-names">Vako Khvedelidze</span>
+        <span class="meta-names">Mattia Mastandrea</span>
+        <span class="meta-names">Ricardo Andrés Méndez Cavalieri</span>
+        <span class="meta-names">Rawad Yared</span>
+      </div>
+      <div class="meta-col">
+        <span class="meta-label">Course</span>
+        <span class="meta-value">Ripple-IE Blockchain<br>XRPL &amp; Policy Gateway Specialization</span>
+      </div>
+      <div class="meta-col">
+        <span class="meta-label">Date</span>
+        <span class="meta-value">April 2026</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       §01 — THE WINDOW
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="slide" data-section="The Window">
+    <div class="slide-title-block">
+      <div class="eyebrow">§01 · The regulatory window</div>
+      <h2 class="display display-lg">The perimeter closes on <em>2 August 2026</em>.</h2>
+    </div>
+
+    <div class="timeline">
+      <div class="timeline-track"></div>
+      <div class="timeline-row">
+        <div class="timeline-node">
+          <div class="timeline-date">01 Jul 2026</div>
+          <div class="timeline-title">MiCA grandfathering expires</div>
+          <div class="timeline-body">Full MiCA + DORA obligations on all 102 authorised CASPs.</div>
+        </div>
+        <div class="timeline-node node-critical">
+          <div class="timeline-date">02 Aug 2026</div>
+          <div class="timeline-title">AI Act high-risk obligations</div>
+          <div class="timeline-body">Article 14 human oversight becomes binding. Up to €35M or 7%.</div>
+        </div>
+        <div class="timeline-node">
+          <div class="timeline-date">09 Dec 2026</div>
+          <div class="timeline-title">Product Liability Directive</div>
+          <div class="timeline-body">AI systems become "products" under strict liability.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       §02 — INCIDENTS  (hero numbers)
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="slide" data-section="Problem Proof">
+    <div class="slide-title-block">
+      <div class="eyebrow">§02 · What is already breaking</div>
+      <h2 class="display display-lg">AI agents are already trading. <em>And losing.</em></h2>
+    </div>
+
+    <div class="incidents-hero">
+      <div class="incident-cell">
+        <div class="incident-loss">−$47K</div>
+        <div class="incident-name">Freysa</div>
+        <div class="incident-cause">Prompt injection</div>
+        <div class="incident-date">Nov 2024</div>
+      </div>
+      <div class="incident-cell">
+        <div class="incident-loss">−$100K</div>
+        <div class="incident-name">AIXBT</div>
+        <div class="incident-cause">Agent compromise</div>
+        <div class="incident-date">2025</div>
+      </div>
+      <div class="incident-cell">
+        <div class="incident-loss">−$40M</div>
+        <div class="incident-name">Step Finance</div>
+        <div class="incident-cause">Supply-chain attack</div>
+        <div class="incident-date">Jan 2026</div>
+      </div>
+    </div>
+
+    <div class="incident-quote-block">
+      <p class="incident-quote">"Prompt injection is unlikely to ever be fully solved."</p>
+      <p class="incident-quote-attr">OpenAI · December 2025</p>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       §03 — COMPLIANCE GAP
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="slide" data-section="Compliance Gap">
+    <div class="slide-title-block">
+      <div class="eyebrow">§03 · The compliance gap</div>
+      <h2 class="display display-lg">Three regimes. <em>Penalties stack.</em></h2>
+    </div>
+
+    <div class="regstack">
+      <div class="regrow">
+        <div class="regrow-label">MiCA</div>
+        <div class="regrow-body"><strong>Art. 68(7)</strong> — CASPs must run DORA-grade ICT systems.</div>
+      </div>
+      <div class="regrow">
+        <div class="regrow-label">DORA</div>
+        <div class="regrow-body"><strong>Art. 5(2)</strong> — management accountability is <em>non-delegable</em>.</div>
+      </div>
+      <div class="regrow">
+        <div class="regrow-label">EU AI Act</div>
+        <div class="regrow-body"><strong>Art. 14(4)(e)</strong> — a "stop button or similar procedure" must exist.</div>
+      </div>
+    </div>
+
+    <div class="penalty-panel">
+      <div class="penalty-cell">
+        <div class="mono-label">AI Act</div>
+        <div class="penalty-amount">€35M · 7%</div>
+        <div class="penalty-context">of worldwide annual turnover</div>
+      </div>
+      <div class="penalty-cell">
+        <div class="mono-label">DORA</div>
+        <div class="penalty-amount">€5M · 3–12.5%</div>
+        <div class="penalty-context">member-state dependent</div>
+      </div>
+      <div class="penalty-cell">
+        <div class="mono-label">MiCA</div>
+        <div class="penalty-amount">Stacks on top</div>
+        <div class="penalty-context">combined exposure is existential</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       §04 — INSIGHT
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="slide insight-slide" data-section="The Insight">
+    <div class="eyebrow">§04 · The insight</div>
+    <h2 class="insight-statement">Software middleware can be <em>jailbroken</em>.<br>Cryptography cannot.</h2>
+    <p class="insight-followup">
+      <strong>Signet</strong> is a mandatory co-signer on every agent transaction. Without its signature the quorum is not met, and <em>the protocol itself</em> refuses to settle. Compliance becomes a property of the ledger, not a policy a language model can be talked out of.
+    </p>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       §05 — ARCHITECTURE
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="slide" data-section="Architecture">
+    <div class="slide-title-block">
+      <div class="eyebrow">§05 · Architecture</div>
+      <h2 class="display display-md">A policy engine that <em>holds one of two required keys</em>. The LLM never touches it.</h2>
+    </div>
+
+    <div class="arch-wrapper">
+      <svg class="arch-svg" viewBox="0 0 1200 460" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#D97757"/>
+          </marker>
+          <marker id="arrowDim" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#8A8680"/>
+          </marker>
+        </defs>
+
+        <rect x="40" y="30" width="300" height="130" fill="none" stroke="#6D6A64" stroke-width="1" stroke-dasharray="5,4"/>
+        <text x="60" y="58" fill="#C84E3A" font-family="JetBrains Mono" font-size="10" letter-spacing="2">AGENT · UNTRUSTED ZONE</text>
+        <text x="60" y="98" fill="#F2EDE4" font-family="Fraunces" font-size="26" font-style="italic">LLM + tools</text>
+        <text x="60" y="126" fill="#A8A39B" font-family="Instrument Sans" font-size="13">Proposes intents. May be jailbroken.</text>
+        <g transform="translate(135, 175)">
+          <rect width="110" height="28" fill="none" stroke="#D97757" stroke-width="1"/>
+          <text x="55" y="19" text-anchor="middle" fill="#D97757" font-family="JetBrains Mono" font-size="11">◆ key_a</text>
+        </g>
+
+        <rect x="860" y="30" width="300" height="130" fill="none" stroke="#D97757" stroke-width="1"/>
+        <text x="880" y="58" fill="#7CA877" font-family="JetBrains Mono" font-size="10" letter-spacing="2">POLICY ENGINE · ATTESTED</text>
+        <text x="880" y="98" fill="#F2EDE4" font-family="Fraunces" font-size="26" font-style="italic">HSM / TEE</text>
+        <text x="880" y="126" fill="#A8A39B" font-family="Instrument Sans" font-size="13">AWS Nitro · SGX · TDX · SEV-SNP</text>
+        <g transform="translate(955, 175)">
+          <rect width="110" height="28" fill="#D97757" stroke="#D97757" stroke-width="1"/>
+          <text x="55" y="19" text-anchor="middle" fill="#0B0A09" font-family="JetBrains Mono" font-size="11" font-weight="500">◆ key_b</text>
+        </g>
+
+        <path d="M 345 80 Q 600 25 855 80" stroke="#8A8680" stroke-width="1" stroke-dasharray="4,4" fill="none" marker-end="url(#arrowDim)"/>
+        <text x="600" y="22" text-anchor="middle" fill="#A8A39B" font-family="JetBrains Mono" font-size="11">intent · EIP-712 typed</text>
+
+        <rect x="400" y="110" width="400" height="118" fill="#14120F" stroke="#D97757" stroke-width="1"/>
+        <text x="420" y="136" fill="#D97757" font-family="JetBrains Mono" font-size="10" letter-spacing="2">DETERMINISTIC RULES · evaluated per-intent</text>
+        <text x="420" y="164" fill="#F2EDE4" font-family="JetBrains Mono" font-size="12">notional caps · allowlists · slippage</text>
+        <text x="420" y="184" fill="#F2EDE4" font-family="JetBrains Mono" font-size="12">KYT / AML · sanctions · velocity · VaR</text>
+        <text x="420" y="212" fill="#A8A39B" font-family="JetBrains Mono" font-size="11">tier: INSTANT · NOTIFY · DELAY · HUMAN</text>
+
+        <line x1="190" y1="210" x2="190" y2="322" stroke="#D97757" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <text x="200" y="272" fill="#D97757" font-family="JetBrains Mono" font-size="11" font-style="italic">sig_a</text>
+        <line x1="1010" y1="210" x2="1010" y2="322" stroke="#D97757" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <text x="1000" y="272" fill="#D97757" font-family="JetBrains Mono" font-size="11" font-style="italic" text-anchor="end">sig_b</text>
+
+        <rect x="40" y="335" width="1120" height="62" fill="#14120F" stroke="#D97757" stroke-width="1"/>
+        <text x="60" y="360" fill="#D97757" font-family="JetBrains Mono" font-size="10" letter-spacing="2">XRPL · SIGNERLISTSET QUORUM</text>
+        <text x="60" y="383" fill="#F2EDE4" font-family="Fraunces" font-size="15" font-style="italic">rippled rejects any transaction below quorum weight — protocol-level enforcement, no smart-contract surface</text>
+
+        <line x1="600" y1="397" x2="600" y2="428" stroke="#8A8680" stroke-width="1" marker-end="url(#arrowDim)"/>
+        <text x="600" y="452" text-anchor="middle" fill="#A8A39B" font-family="JetBrains Mono" font-size="11">settled tx · memo: reasoningCommit = MerkleRoot(trace)</text>
+      </svg>
+
+      <div class="arch-legend">
+        <div class="arch-legend-item">
+          <strong>Two-of-two quorum</strong>
+          A jailbroken agent can propose anything — without key_b's signature, the protocol refuses.
+        </div>
+        <div class="arch-legend-item">
+          <strong>Revocation in one transaction</strong>
+          Single on-chain <code style="font-family:var(--font-mono);color:var(--accent);">SignerListSet</code> updates the quorum. No re-deploys.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       §06 — TRANSACTION FLOW
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="slide" data-section="Transaction Flow">
+    <div class="slide-title-block">
+      <div class="eyebrow">§06 · A compliant trade, end to end</div>
+      <h2 class="display display-md">Six steps. Each produces <em>an artefact a regulator can query</em>.</h2>
+    </div>
+
+    <div class="flow-grid">
+      <div class="flow-step">
+        <div class="flow-num">01 · PROPOSE</div>
+        <div class="flow-title">Agent emits a typed intent</div>
+        <div class="flow-desc">Structured decision. Signed EIP-712 struct binds intent to policy version.</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">02 · EVALUATE</div>
+        <div class="flow-title">Policy engine runs the rules</div>
+        <div class="flow-desc">Notional cap, allowlists, KYT score, sanctions, VaR — deterministic, per-intent.</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">03 · ROUTE</div>
+        <div class="flow-title">Escalation tier decides</div>
+        <div class="flow-desc">INSTANT co-signs. DELAY queues. HUMAN routes to a clear-signing UI.</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">04 · CO-SIGN</div>
+        <div class="flow-title">Policy key signs in the enclave</div>
+        <div class="flow-desc">TEE attestation binds the signature to a known binary. Key never leaves.</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">05 · SETTLE</div>
+        <div class="flow-title">XRPL enforces the quorum natively</div>
+        <div class="flow-desc">3-of-5 multisigned transaction costs ~40 drops. Protocol, not contract, validates.</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">06 · ATTEST</div>
+        <div class="flow-title">Merkle commit lands on-chain</div>
+        <div class="flow-desc">Memo carries reasoningCommit. Full trace persists off-chain for regulator disclosure.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       §07 — WHY XRPL
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="slide" data-section="Why XRPL">
+    <div class="slide-title-block">
+      <div class="eyebrow">§07 · Why XRPL, and why only now</div>
+      <h2 class="display display-md">Four primitives on mainnet. <em>No other L1 has all four.</em></h2>
+    </div>
+
+    <div class="primitives-grid">
+      <div class="primitive">
+        <div class="primitive-name">Native Multisig</div>
+        <div class="primitive-status">Long-live · no contracts</div>
+        <div class="primitive-detail"><code>SignerListSet</code> · 32 signers, weighted quorum. <code>rippled</code> C++ rejects below-quorum transactions. No deployment surface, no audit burden.</div>
+      </div>
+      <div class="primitive">
+        <div class="primitive-name">Credentials</div>
+        <div class="primitive-status">Live · September 2025</div>
+        <div class="primitive-detail">On-ledger attestations of KYB / KYC. The signing layer can require them before releasing funds to a counterparty.</div>
+      </div>
+      <div class="primitive">
+        <div class="primitive-name">Permissioned Domains</div>
+        <div class="primitive-status">Live · February 2026</div>
+        <div class="primitive-detail">Protocol-native gating of which accounts can transact in a given domain — MiCA-style whitelisting without application-layer trust.</div>
+      </div>
+      <div class="primitive">
+        <div class="primitive-name">Sub-cent Fees</div>
+        <div class="primitive-status">Base 10 drops</div>
+        <div class="primitive-detail">3-of-5 multisigned transaction ≈ 40 drops. Fractions of a cent — high-frequency agent activity is economically viable.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       §08 — ATTESTATION
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="slide" data-section="Attestation">
+    <div class="slide-title-block">
+      <div class="eyebrow">§08 · The attestation trail</div>
+      <h2 class="display display-md">Every decision leaves a <em>cryptographically anchored</em> trace. Strategies stay private.</h2>
+    </div>
+
+    <div class="attest-pipeline">
+      <div class="attest-row">
+        <div class="attest-stage">01</div>
+        <div class="attest-what">Reasoning trace captured</div>
+        <div class="attest-how">{prompt, context, tools, reasoning, intent}</div>
+        <div class="attest-where">Structured, signed, timestamped by the runtime.</div>
+      </div>
+      <div class="attest-row">
+        <div class="attest-stage">02</div>
+        <div class="attest-what">Hashed into a Merkle root</div>
+        <div class="attest-how">reasoningCommit = MerkleRoot(chunks)</div>
+        <div class="attest-where">Client-side. Selective disclosure per chunk.</div>
+      </div>
+      <div class="attest-row">
+        <div class="attest-stage">03</div>
+        <div class="attest-what">Commit lands on XRPL</div>
+        <div class="attest-how">Memo field of the multisigned tx</div>
+        <div class="attest-where">Public, tamper-evident, ledger-ordered.</div>
+      </div>
+      <div class="attest-row">
+        <div class="attest-stage">04</div>
+        <div class="attest-what">Full trace persists off-chain</div>
+        <div class="attest-how">S3 Object Lock · IPFS / Filecoin</div>
+        <div class="attest-where">EDPB 02/2025: no personal data on-chain.</div>
+      </div>
+      <div class="attest-row">
+        <div class="attest-stage">05</div>
+        <div class="attest-what">Regulator disclosure</div>
+        <div class="attest-how">Merkle proof · signed access token</div>
+        <div class="attest-where">Only what is asked. Strategy stays private.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       §09 — COMPETITIVE LANDSCAPE
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="slide" data-section="Landscape">
+    <div class="slide-title-block">
+      <div class="eyebrow">§09 · The white space</div>
+      <h2 class="display display-md">Five adjacent categories. <em>None cover the intersection.</em></h2>
+    </div>
+
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th style="width: 28%;">Category</th>
+          <th class="th-center">Pre-trade</th>
+          <th class="th-center">AI-agent aware</th>
+          <th class="th-center">On-chain verifiable</th>
+          <th class="th-center">AML / sanctions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="comp-vendor">Blockchain analytics</span></td>
+          <td class="td-center"><span class="cell-no">Post-trade</span></td>
+          <td class="td-center"><span class="cell-no">No</span></td>
+          <td class="td-center"><span class="cell-no">No</span></td>
+          <td class="td-center"><span class="cell-yes">Yes</span></td>
+        </tr>
+        <tr>
+          <td><span class="comp-vendor">MPC custodians</span></td>
+          <td class="td-center"><span class="cell-yes">Yes</span></td>
+          <td class="td-center"><span class="cell-no">Human-ops</span></td>
+          <td class="td-center"><span class="cell-no">Closed enclave</span></td>
+          <td class="td-center"><span class="cell-partial">Plug-in</span></td>
+        </tr>
+        <tr>
+          <td><span class="comp-vendor">TradFi pre-trade</span></td>
+          <td class="td-center"><span class="cell-yes">Yes</span></td>
+          <td class="td-center"><span class="cell-no">No</span></td>
+          <td class="td-center"><span class="cell-no">No</span></td>
+          <td class="td-center"><span class="cell-yes">Yes</span></td>
+        </tr>
+        <tr>
+          <td><span class="comp-vendor">Agentic wallets</span></td>
+          <td class="td-center"><span class="cell-yes">Yes</span></td>
+          <td class="td-center"><span class="cell-yes">Yes</span></td>
+          <td class="td-center"><span class="cell-no">MPC only</span></td>
+          <td class="td-center"><span class="cell-no">No</span></td>
+        </tr>
+        <tr>
+          <td><span class="comp-vendor">AI governance</span></td>
+          <td class="td-center"><span class="cell-no">Prompt layer</span></td>
+          <td class="td-center"><span class="cell-yes">Yes</span></td>
+          <td class="td-center"><span class="cell-no">No</span></td>
+          <td class="td-center"><span class="cell-no">No</span></td>
+        </tr>
+        <tr class="row-ours">
+          <td><span class="comp-vendor">Signet</span></td>
+          <td class="td-center"><span class="cell-yes">Yes</span></td>
+          <td class="td-center"><span class="cell-yes">Yes</span></td>
+          <td class="td-center"><span class="cell-yes">Yes</span></td>
+          <td class="td-center"><span class="cell-yes">Yes</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       §10 — MARKET
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="slide" data-section="Market">
+    <div class="slide-title-block">
+      <div class="eyebrow">§10 · Market &amp; demand</div>
+      <h2 class="display display-md">The category sits at the intersection of three growing markets.</h2>
+    </div>
+
+    <div class="market-grid">
+      <div>
+        <div class="tam-item">
+          <div class="tam-label">TAM · AI in financial services</div>
+          <div class="tam-value">$38.4B <span class="growth">→ $190.3B</span></div>
+          <div class="tam-note">MarketsandMarkets · 2024 → 2030 · 30.6% CAGR</div>
+        </div>
+        <div class="tam-item">
+          <div class="tam-label">SAM · Blockchain RegTech</div>
+          <div class="tam-value">$7.3B <span class="growth">→ $29.5B</span></div>
+          <div class="tam-note">Virtue MR · 2024 → 2030</div>
+        </div>
+        <div class="tam-item">
+          <div class="tam-label">SOM · Directly addressable</div>
+          <div class="tam-value">$982B <span class="growth">AUM</span></div>
+          <div class="tam-note">PwC / AIMA 2025 · 122 institutional managers</div>
+        </div>
+      </div>
+
+      <div class="market-sidebar">
+        <div class="mono-label" style="margin-bottom: 0.75rem;">Signals</div>
+        <div class="sidebar-stat">
+          <div class="sidebar-stat-num">55%</div>
+          <div class="sidebar-stat-label">of traditional hedge funds now hold crypto — up from 29% in 2022</div>
+        </div>
+        <div class="sidebar-stat">
+          <div class="sidebar-stat-num">40%</div>
+          <div class="sidebar-stat-label">of enterprise apps will integrate AI agents by end-2026 (Gartner)</div>
+        </div>
+        <div class="sidebar-stat">
+          <div class="sidebar-stat-num">~102</div>
+          <div class="sidebar-stat-label">authorised CASPs — every one a MiCA + DORA dual filer</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       §11 — GO TO MARKET
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="slide" data-section="Go-to-market">
+    <div class="slide-title-block">
+      <div class="eyebrow">§11 · Go-to-market</div>
+      <h2 class="display display-md">Priced as infrastructure. Distributed through <em>channels already paid for</em>.</h2>
+    </div>
+
+    <div class="gtm-row">
+      <div>
+        <div class="gtm-section-title">Pricing</div>
+        <div class="pricing-band">
+          <span class="pricing-amount">$50K–250K</span>
+          <span class="pricing-unit">&nbsp;/ ACV</span>
+        </div>
+        <p class="pricing-note">Tiered by AUM and transaction volume. 20–40 customers reaches the Series-A revenue threshold cleanly.</p>
+      </div>
+
+      <div>
+        <div class="gtm-section-title">Distribution</div>
+        <ul class="distribution-list">
+          <li>
+            <div class="dist-name">XRPL Accelerator <span>Ripple + Tenity · 12 weeks · Singapore</span></div>
+            <div class="dist-amount">up to $200K</div>
+          </li>
+          <li>
+            <div class="dist-name">Outlier Ventures Base Camp <span>Post-Web / agentic-internet vertical</span></div>
+            <div class="dist-amount">£150K + £350K</div>
+          </li>
+          <li>
+            <div class="dist-name">Ripple enterprise channel <span>Citi · BBVA · HSBC · SocGen Forge · DBS</span></div>
+            <div class="dist-amount">pipeline</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       §12 — COMPLIANCE FIT
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="slide" data-section="Compliance Fit">
+    <div class="slide-title-block">
+      <div class="eyebrow">§12 · Compliance fit</div>
+      <h2 class="display display-md">Each obligation maps to a <em>specific product primitive</em>.</h2>
+    </div>
+
+    <table class="fit-table">
+      <thead>
+        <tr>
+          <th>Obligation</th>
+          <th></th>
+          <th>Signet primitive</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="fit-obligation">
+            <span class="art">MiCA · Arts. 68(7), 78, 81</span>
+            <span class="desc">ICT resilience, order records, suitability</span>
+          </td>
+          <td class="fit-arrow">→</td>
+          <td class="fit-feature">HSM / TEE policy engine + memo-anchored decision log.</td>
+        </tr>
+        <tr>
+          <td class="fit-obligation">
+            <span class="art">DORA · Art. 5(2)</span>
+            <span class="desc">Non-delegable management accountability</span>
+          </td>
+          <td class="fit-arrow">→</td>
+          <td class="fit-feature"><strong>Human multisig tier</strong> with time-lock.</td>
+        </tr>
+        <tr>
+          <td class="fit-obligation">
+            <span class="art">AI Act · Art. 14</span>
+            <span class="desc">Human oversight + "stop button"</span>
+          </td>
+          <td class="fit-arrow">→</td>
+          <td class="fit-feature">Emergency-freeze signer — a single <strong>SignerListSet</strong> revokes the agent.</td>
+        </tr>
+        <tr>
+          <td class="fit-obligation">
+            <span class="art">GDPR · EDPB 02/2025</span>
+            <span class="desc">No personal data on-chain</span>
+          </td>
+          <td class="fit-arrow">→</td>
+          <td class="fit-feature">Hashes on-chain; full trace in WORM; selective disclosure.</td>
+        </tr>
+        <tr>
+          <td class="fit-obligation">
+            <span class="art">PLD · 2024/2853</span>
+            <span class="desc">Strict liability, presumption of defect</span>
+          </td>
+          <td class="fit-arrow">→</td>
+          <td class="fit-feature">Attestation trail = <strong>defendable evidence of reasonable care</strong>.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       §13 — LIMITATIONS
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="slide" data-section="Limitations">
+    <div class="slide-title-block">
+      <div class="eyebrow">§13 · What we are honest about</div>
+      <h2 class="display display-md">The thesis is strong. <em>The details are not free.</em></h2>
+    </div>
+
+    <div class="limits-list">
+      <div class="limit-item">
+        <div class="limit-num">L01</div>
+        <div>
+          <div class="limit-head">Article 14 still requires a human.</div>
+          <div class="limit-body">The stop button must exist and a trained, authorised person must be able to press it. Signet makes oversight <em>tractable</em> — it does not replace the human.</div>
+        </div>
+      </div>
+      <div class="limit-item">
+        <div class="limit-num">L02</div>
+        <div>
+          <div class="limit-head">The policy engine is a high-value target.</div>
+          <div class="limit-body">Formal verification, fuzz testing, redundant invariants, and a separate high-threshold human multisig with time-lock for any policy change.</div>
+        </div>
+      </div>
+      <div class="limit-item">
+        <div class="limit-num">L03</div>
+        <div>
+          <div class="limit-head">XRPL Hooks and Smart Escrows are not yet live.</div>
+          <div class="limit-body">On-chain rule expressiveness is constrained. The policy engine therefore lives off-chain in HSM / TEE infrastructure and leverages existing primitives.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       §14 — ROADMAP
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="slide" data-section="Roadmap">
+    <div class="slide-title-block">
+      <div class="eyebrow">§14 · Roadmap &amp; ask</div>
+      <h2 class="display display-md">Eighteen months to Series A. <em>The regulatory clock is the schedule.</em></h2>
+    </div>
+
+    <div class="roadmap">
+      <div class="roadmap-track"></div>
+      <div class="roadmap-row">
+        <div class="roadmap-col">
+          <div class="roadmap-period">Q2–Q3 2026</div>
+          <div class="roadmap-milestone">Testnet with 2–3 design partners</div>
+          <div class="roadmap-detail">XRPL Accelerator submission. Policy engine v0 on AWS Nitro.</div>
+        </div>
+        <div class="roadmap-col">
+          <div class="roadmap-period">Q4 2026</div>
+          <div class="roadmap-milestone">First CASP in production</div>
+          <div class="roadmap-detail">MiCA + DORA dual-audit artefacts. FCA Sandbox cohort.</div>
+        </div>
+        <div class="roadmap-col">
+          <div class="roadmap-period">H1 2027</div>
+          <div class="roadmap-milestone">SOC 2 · ISO 27001</div>
+          <div class="roadmap-detail">5–10 paying customers. Formal verification of the policy kernel.</div>
+        </div>
+        <div class="roadmap-col">
+          <div class="roadmap-period">H2 2027</div>
+          <div class="roadmap-milestone">Series A</div>
+          <div class="roadmap-detail">$1–3M ARR threshold. 20–40 customers.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ask-panel">
+      <div>
+        <div class="ask-label">Ask</div>
+        <div class="ask-primary">$2–5M seed</div>
+      </div>
+      <div>
+        <div class="ask-label">+ non-dilutive</div>
+        <div class="ask-plus">≈ $500K</div>
+      </div>
+      <div class="ask-note">Benchmarks: RegTech / crypto-compliance seed $2–5M, Series A $10–25M. Chainalysis $500M+, TRM &amp; Elliptic $100M+ each.</div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       §15 — WHY NOW
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="slide" data-section="Why Now">
+    <div class="whynow">
+      <div class="eyebrow">§15 · Why now, why us, why this</div>
+      <h2 class="whynow-statement">
+        The pitch is not <em>"AI agents will trade crypto."</em> That is already happening — losing money, outside any framework. The pitch is that the regulatory, legal, and security layers require <em>cryptographic enforcement</em>, and XRPL is the chain whose primitives arrived in time.
+      </h2>
+
+      <div class="whynow-pillars">
+        <div>
+          <div class="pillar-label">Regulation</div>
+          <p class="pillar-body">Three instruments converge in an <em>18-month window</em>.</p>
+        </div>
+        <div>
+          <div class="pillar-label">Technology</div>
+          <p class="pillar-body">XRPL shipped the final primitive in <em>February 2026</em>.</p>
+        </div>
+        <div>
+          <div class="pillar-label">Competition</div>
+          <p class="pillar-body">Five adjacent categories — <em>none reach the intersection</em>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       §16 — THANKS
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="slide thanks" data-section="Q&amp;A">
+    <h2 class="thanks-wordmark">Thank&nbsp;you<span class="dot">.</span></h2>
+    <p class="thanks-ask">Questions, critique, co-conspirators welcome.</p>
+    <div class="thanks-contact">
+      <div class="meta-team">
+        <span class="meta-label">Team</span>
+        <span class="meta-names">Juan Diego Fernández Araujo</span>
+        <span class="meta-names">Vako Khvedelidze</span>
+        <span class="meta-names">Mattia Mastandrea</span>
+        <span class="meta-names">Ricardo Andrés Méndez Cavalieri</span>
+        <span class="meta-names">Rawad Yared</span>
+      </div>
+      <div class="meta-col">
+        <span class="meta-label">Course</span>
+        <span class="meta-value">Ripple-IE Blockchain<br>XRPL &amp; Policy Gateway Specialization</span>
+      </div>
+      <div class="meta-col">
+        <span class="meta-label">References</span>
+        <span class="meta-value">Full brief on request</span>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  // ═══════════════════════════════════════════════════════════════
+  // Deck controller
+  // ═══════════════════════════════════════════════════════════════
+
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  const progressEl = document.getElementById('progress');
+  const counterEl  = document.getElementById('chrome-current');
+  const sectionEl  = document.getElementById('chrome-section');
+  const totalEl    = document.getElementById('chrome-total');
+
+  totalEl.textContent = String(total - 1).padStart(2, '0');
+
+  let current = 0;
+
+  function show(n) {
+    if (n < 0 || n >= total) return;
+    slides[current].classList.remove('active');
+    current = n;
+    slides[current].classList.add('active');
+
+    const pct = total === 1 ? 100 : (current / (total - 1)) * 100;
+    progressEl.style.width = pct + '%';
+    counterEl.textContent = String(current).padStart(2, '0');
+
+    const section = slides[current].getAttribute('data-section') || '';
+    sectionEl.textContent = section.toUpperCase();
+  }
+
+  document.addEventListener('keydown', (e) => {
+    switch (e.key) {
+      case 'ArrowRight':
+      case 'ArrowDown':
+      case ' ':
+      case 'PageDown':
+        e.preventDefault();
+        show(current + 1);
+        break;
+      case 'ArrowLeft':
+      case 'ArrowUp':
+      case 'PageUp':
+        e.preventDefault();
+        show(current - 1);
+        break;
+      case 'Home':
+        e.preventDefault();
+        show(0);
+        break;
+      case 'End':
+        e.preventDefault();
+        show(total - 1);
+        break;
+      case 'Escape':
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {});
+        }
+        break;
+      case 'f':
+      case 'F':
+        e.preventDefault();
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+        break;
+      default:
+        if (/^[0-9]$/.test(e.key)) {
+          const idx = parseInt(e.key, 10);
+          if (idx < total) show(idx);
+        }
+    }
+  });
+
+  // Touch / swipe
+  let touchStartX = null;
+  document.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+  }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    if (touchStartX === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) show(current + (dx < 0 ? 1 : -1));
+    touchStartX = null;
+  }, { passive: true });
+
+  // Click to advance (right 55%) / back (left 15%)
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('a, button, input, kbd')) return;
+    const w = window.innerWidth;
+    if (e.clientX > w * 0.55) show(current + 1);
+    else if (e.clientX < w * 0.15) show(current - 1);
+  });
+
+  // Init
+  show(0);
+</script>
+
+</body>
+</html>

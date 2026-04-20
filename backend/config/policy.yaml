@@ -1,0 +1,12 @@
+allowlist_destinations:
+  - rTreasuryVaultXXXXXXXXXXXXXXXXXXXXXXXX
+  - rRLUSDIssuerXXXXXXXXXXXXXXXXXXXXXXXXXX
+allowlist_assets:
+  - XRP
+  - RLUSD
+per_tx_cap_usd: 25000
+daily_cap_usd: 100000
+sanctions_source: mock
+# Testnet-friendly escalation threshold. Demo scenario C will trip this.
+escalation_tier_threshold_usd: 1000
+xrp_usd_price: 0.50

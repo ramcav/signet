@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+node_modules/
+dist/
+build/
+.env
+.env.local
+
+# Demo-only wallet seeds — regenerate with scripts/fund_wallets.py
+backend/config/wallets.json
