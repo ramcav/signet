@@ -9,6 +9,7 @@ import { LedgerPanel } from "./components/LedgerPanel";
 import { EscalationCard } from "./components/EscalationCard";
 import { ReasoningCommit } from "./components/ReasoningCommit";
 import { PipelineDiagram } from "./components/PipelineDiagram";
+import { CinematicOverlay } from "./components/CinematicOverlay";
 import { reducer, initialRunState } from "./state";
 import { useEventStream } from "./useEventStream";
 import type { Health, IntentResponse, ScenarioKey, SignetEvent } from "./types";
@@ -47,6 +48,7 @@ export default function App() {
   });
   const [escalationBusy, setEscalationBusy] = useState(false);
   const [health, setHealth] = useState<Health | null>(null);
+  const [cinematic, setCinematic] = useState(false);
 
   // Map runId -> scenario key so events route even if user switches tabs.
   const runIdToScenario = useRef<Map<string, ScenarioKey>>(new Map());
@@ -154,7 +156,20 @@ export default function App() {
 
   return (
     <div className="min-h-full flex flex-col">
-      <Header health={health} />
+      <Header
+        health={health}
+        cinematic={cinematic}
+        onToggleCinematic={() => setCinematic((v) => !v)}
+      />
+      <CinematicOverlay
+        active={cinematic}
+        scenario={active}
+        state={state}
+        onClose={() => setCinematic(false)}
+        onApprove={() => approveEscalation(active)}
+        onReject={() => rejectEscalation(active)}
+        escalationBusy={escalationBusy}
+      />
       <Tabs active={active} onChange={setActive} />
       <div className="px-8 py-6">
         <p className="text-sm text-muted mb-6 max-w-2xl">{cfg.blurb}</p>

@@ -1,7 +1,15 @@
 import type { Health } from "../types";
 import { truncMid } from "../util";
 
-export function Header({ health }: { health: Health | null }) {
+export function Header({
+  health,
+  cinematic,
+  onToggleCinematic,
+}: {
+  health: Health | null;
+  cinematic: boolean;
+  onToggleCinematic: () => void;
+}) {
   return (
     <header className="flex items-start justify-between px-8 py-6 border-b border-border">
       <div>
@@ -13,6 +21,19 @@ export function Header({ health }: { health: Health | null }) {
         </p>
       </div>
       <div className="flex items-center gap-3">
+        <button
+          onClick={onToggleCinematic}
+          className={
+            "font-mono text-xs uppercase tracking-widest border rounded-lg px-3 py-2 transition-colors " +
+            (cinematic
+              ? "border-accent text-accent bg-accent/10"
+              : "border-border text-muted hover:text-fg hover:border-fg/60")
+          }
+          title="Toggle cinematic mode"
+        >
+          <span className={"inline-block w-1.5 h-1.5 rounded-full mr-2 " + (cinematic ? "bg-accent" : "bg-muted/50")} />
+          cinematic
+        </button>
         {health && typeof health.xrp_usd === "number" ? (
           <div className="flex items-center gap-3 text-xs font-mono border border-border rounded-lg px-3 py-2">
             <span className="w-2 h-2 rounded-full bg-pass inline-block" />
