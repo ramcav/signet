@@ -1456,22 +1456,22 @@ body::before {
         </g>
 
         <rect x="860" y="30" width="300" height="130" fill="none" stroke="#D97757" stroke-width="1"/>
-        <text x="880" y="58" fill="#7CA877" font-family="JetBrains Mono" font-size="10" letter-spacing="2">POLICY ENGINE · ATTESTED</text>
-        <text x="880" y="98" fill="#F2EDE4" font-family="Fraunces" font-size="26" font-style="italic">HSM / TEE</text>
-        <text x="880" y="126" fill="#A8A39B" font-family="Instrument Sans" font-size="13">AWS Nitro · SGX · TDX · SEV-SNP</text>
+        <text x="880" y="58" fill="#7CA877" font-family="JetBrains Mono" font-size="10" letter-spacing="2">POLICY ENGINE · CO-SIGNER</text>
+        <text x="880" y="98" fill="#F2EDE4" font-family="Fraunces" font-size="26" font-style="italic">Rules + key</text>
+        <text x="880" y="126" fill="#A8A39B" font-family="Instrument Sans" font-size="13">v0: separate process · v1: HSM / TEE (Nitro · SGX · TDX)</text>
         <g transform="translate(955, 175)">
           <rect width="110" height="28" fill="#D97757" stroke="#D97757" stroke-width="1"/>
           <text x="55" y="19" text-anchor="middle" fill="#0B0A09" font-family="JetBrains Mono" font-size="11" font-weight="500">◆ key_b</text>
         </g>
 
         <path d="M 345 80 Q 600 25 855 80" stroke="#8A8680" stroke-width="1" stroke-dasharray="4,4" fill="none" marker-end="url(#arrowDim)"/>
-        <text x="600" y="22" text-anchor="middle" fill="#A8A39B" font-family="JetBrains Mono" font-size="11">intent · EIP-712 typed</text>
+        <text x="600" y="22" text-anchor="middle" fill="#A8A39B" font-family="JetBrains Mono" font-size="11">intent · typed JSON tool-call</text>
 
         <rect x="400" y="110" width="400" height="118" fill="#14120F" stroke="#D97757" stroke-width="1"/>
         <text x="420" y="136" fill="#D97757" font-family="JetBrains Mono" font-size="10" letter-spacing="2">DETERMINISTIC RULES · evaluated per-intent</text>
-        <text x="420" y="164" fill="#F2EDE4" font-family="JetBrains Mono" font-size="12">notional caps · allowlists · slippage</text>
-        <text x="420" y="184" fill="#F2EDE4" font-family="JetBrains Mono" font-size="12">KYT / AML · sanctions · velocity · VaR</text>
-        <text x="420" y="212" fill="#A8A39B" font-family="JetBrains Mono" font-size="11">tier: INSTANT · NOTIFY · DELAY · HUMAN</text>
+        <text x="420" y="164" fill="#F2EDE4" font-family="JetBrains Mono" font-size="12">notional caps · allowlists · daily velocity</text>
+        <text x="420" y="184" fill="#F2EDE4" font-family="JetBrains Mono" font-size="12">KYT / AML · sanctions  (roadmap: VaR · slippage)</text>
+        <text x="420" y="212" fill="#A8A39B" font-family="JetBrains Mono" font-size="11">tier: INSTANT · HUMAN · REFUSE  (roadmap: NOTIFY · DELAY)</text>
 
         <line x1="190" y1="210" x2="190" y2="322" stroke="#D97757" stroke-width="1.5" marker-end="url(#arrow)"/>
         <text x="200" y="272" fill="#D97757" font-family="JetBrains Mono" font-size="11" font-style="italic">sig_a</text>
@@ -1512,27 +1512,27 @@ body::before {
       <div class="flow-step">
         <div class="flow-num">01 · PROPOSE</div>
         <div class="flow-title">Agent emits a typed intent</div>
-        <div class="flow-desc">Structured decision. Signed EIP-712 struct binds intent to policy version.</div>
+        <div class="flow-desc">Structured decision. Typed JSON tool-call binds intent to policy version.</div>
       </div>
       <div class="flow-step">
         <div class="flow-num">02 · EVALUATE</div>
         <div class="flow-title">Policy engine runs the rules</div>
-        <div class="flow-desc">Notional cap, allowlists, KYT score, sanctions, VaR — deterministic, per-intent.</div>
+        <div class="flow-desc">Notional caps, allowlists, daily velocity, KYT score, sanctions — deterministic, per-intent.</div>
       </div>
       <div class="flow-step">
         <div class="flow-num">03 · ROUTE</div>
         <div class="flow-title">Escalation tier decides</div>
-        <div class="flow-desc">INSTANT co-signs. DELAY queues. HUMAN routes to a clear-signing UI.</div>
+        <div class="flow-desc">INSTANT co-signs. HUMAN routes to a clear-signing UI. Roadmap: NOTIFY, DELAY tiers.</div>
       </div>
       <div class="flow-step">
         <div class="flow-num">04 · CO-SIGN</div>
         <div class="flow-title">Policy key signs in the enclave</div>
-        <div class="flow-desc">TEE attestation binds the signature to a known binary. Key never leaves.</div>
+        <div class="flow-desc">Separate-process co-signer; agent cannot access the key. Roadmap: TEE attestation binds the signature to a known binary.</div>
       </div>
       <div class="flow-step">
         <div class="flow-num">05 · SETTLE</div>
         <div class="flow-title">XRPL enforces the quorum natively</div>
-        <div class="flow-desc">3-of-5 multisigned transaction costs ~40 drops. Protocol, not contract, validates.</div>
+        <div class="flow-desc">2-of-2 multisigned transaction costs ~30 drops. Protocol, not contract, validates.</div>
       </div>
       <div class="flow-step">
         <div class="flow-num">06 · ATTEST</div>
@@ -1570,7 +1570,7 @@ body::before {
       <div class="primitive">
         <div class="primitive-name">Sub-cent Fees</div>
         <div class="primitive-status">Base 10 drops</div>
-        <div class="primitive-detail">3-of-5 multisigned transaction ≈ 40 drops. Fractions of a cent — high-frequency agent activity is economically viable.</div>
+        <div class="primitive-detail">2-of-2 multisigned transaction ≈ 30 drops. Fractions of a cent — high-frequency agent activity is economically viable.</div>
       </div>
     </div>
   </section>
