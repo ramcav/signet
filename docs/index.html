@@ -1177,6 +1177,144 @@ body::before {
 .pillar-body em { color: var(--accent); font-style: italic; }
 
 /* ═══════════════════════════════════════════════════════════════
+   Visuals — inline SVG treatments
+   ═══════════════════════════════════════════════════════════════ */
+
+.cover-visual {
+  position: absolute;
+  top: 50%;
+  right: calc(var(--slide-pad-x) - 1rem);
+  transform: translateY(-50%);
+  width: min(30vw, 360px);
+  height: min(30vw, 360px);
+  opacity: 0.9;
+  pointer-events: none;
+  animation: seal-rotate 120s linear infinite;
+}
+
+@keyframes seal-rotate {
+  from { transform: translateY(-50%) rotate(0deg); }
+  to   { transform: translateY(-50%) rotate(360deg); }
+}
+
+.incident-glyph {
+  width: 42px;
+  height: 42px;
+  margin-bottom: 0.85rem;
+  opacity: 0.9;
+}
+
+.insight-visual {
+  margin-top: 2rem;
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+  opacity: 0.92;
+}
+
+.primitive-icon {
+  width: 30px;
+  height: 30px;
+  margin-bottom: 0.75rem;
+  opacity: 0.9;
+}
+
+.whynow-visual {
+  position: absolute;
+  bottom: 2rem;
+  right: var(--slide-pad-x);
+  width: 110px;
+  height: 110px;
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   §03 — WHY EXISTING TOOLS DON'T FIT
+   ═══════════════════════════════════════════════════════════════ */
+
+.gap-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.1rem;
+  margin-top: 0.5rem;
+}
+
+.gap-card {
+  border: 1px solid var(--rule-strong);
+  padding: 1.1rem 1.15rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-elev);
+}
+
+.gap-vendor-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 0.45rem;
+}
+
+.gap-vendor-name {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-variation-settings: "opsz" 36;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  margin-bottom: 0.2rem;
+}
+
+.gap-vendor-sub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-dim);
+  letter-spacing: 0.04em;
+  margin-bottom: 0.95rem;
+}
+
+.gap-does, .gap-misses {
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.gap-does {
+  color: var(--ink);
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px dashed var(--rule-strong);
+}
+
+.gap-does::before, .gap-misses::before {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  margin-bottom: 0.3rem;
+}
+
+.gap-does::before { content: "DOES"; color: var(--good); }
+.gap-misses::before { content: "MISSES"; color: var(--critical); }
+
+.gap-misses { color: var(--ink-mid); flex: 1; }
+
+.gap-conclusion {
+  margin-top: 1.25rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--accent);
+  background: var(--accent-wash);
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-variation-settings: "opsz" 36;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+.gap-conclusion em { color: var(--accent); font-style: italic; }
+
+/* ═══════════════════════════════════════════════════════════════
    §16 — DEMO PROOF
    ═══════════════════════════════════════════════════════════════ */
 
@@ -1406,6 +1544,31 @@ body::before {
        §00 — COVER
        ═══════════════════════════════════════════════════════════ -->
   <section class="slide cover active" data-section="Cover">
+    <svg class="cover-visual" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <radialGradient id="sealGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#D97757" stop-opacity="0.10"/>
+          <stop offset="100%" stop-color="#D97757" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <circle cx="150" cy="150" r="148" fill="url(#sealGlow)"/>
+      <circle cx="150" cy="150" r="140" fill="none" stroke="#D97757" stroke-width="0.8" stroke-dasharray="2 4" opacity="0.75"/>
+      <circle cx="150" cy="150" r="110" fill="none" stroke="#F2EDE4" stroke-width="0.5" opacity="0.25"/>
+      <circle cx="150" cy="150" r="70"  fill="none" stroke="#D97757" stroke-width="0.8" opacity="0.85"/>
+      <g stroke="#F2EDE4" stroke-width="0.5" opacity="0.3">
+        <line x1="150" y1="40"  x2="150" y2="58"/>
+        <line x1="150" y1="260" x2="150" y2="242"/>
+        <line x1="40"  y1="150" x2="58"  y2="150"/>
+        <line x1="260" y1="150" x2="242" y2="150"/>
+      </g>
+      <text x="150" y="130" text-anchor="middle" fill="#D97757" font-family="JetBrains Mono" font-size="8" letter-spacing="3">KEY_A</text>
+      <text x="150" y="178" text-anchor="middle" fill="#D97757" font-family="JetBrains Mono" font-size="8" letter-spacing="3">KEY_B</text>
+      <text x="150" y="158" text-anchor="middle" fill="#F2EDE4" font-family="Fraunces" font-size="16" font-style="italic">2 of 2</text>
+      <g transform="translate(150 150)" fill="none" stroke="#D97757" stroke-width="0.6" opacity="0.9">
+        <polygon points="0,-70 60.6,-35 60.6,35 0,70 -60.6,35 -60.6,-35"/>
+      </g>
+      <text x="150" y="225" text-anchor="middle" fill="#A8A39B" font-family="JetBrains Mono" font-size="8" letter-spacing="4">SIGNERLISTSET · XRPL</text>
+    </svg>
     <h1 class="cover-wordmark">Signet<span class="dot">.</span></h1>
     <p class="cover-tagline">Cryptographic compliance rails<br>for agentic finance on XRPL.</p>
     <div class="cover-meta">
@@ -1457,69 +1620,8 @@ body::before {
         </div>
       </div>
     </div>
-  </section>
 
-  <!-- ═══════════════════════════════════════════════════════════
-       §02 — INCIDENTS  (hero numbers)
-       ═══════════════════════════════════════════════════════════ -->
-  <section class="slide" data-section="Problem Proof">
-    <div class="slide-title-block">
-      <div class="eyebrow">§02 · What is already breaking</div>
-      <h2 class="display display-lg">AI agents are already trading. <em>And losing.</em></h2>
-    </div>
-
-    <div class="incidents-hero">
-      <div class="incident-cell">
-        <div class="incident-loss">−$47K</div>
-        <div class="incident-name">Freysa</div>
-        <div class="incident-cause">Prompt injection</div>
-        <div class="incident-date">Nov 2024</div>
-      </div>
-      <div class="incident-cell">
-        <div class="incident-loss">−$100K</div>
-        <div class="incident-name">AIXBT</div>
-        <div class="incident-cause">Agent compromise</div>
-        <div class="incident-date">2025</div>
-      </div>
-      <div class="incident-cell">
-        <div class="incident-loss">−$40M</div>
-        <div class="incident-name">Step Finance</div>
-        <div class="incident-cause">Supply-chain attack</div>
-        <div class="incident-date">Jan 2026</div>
-      </div>
-    </div>
-
-    <div class="incident-quote-block">
-      <p class="incident-quote">"Prompt injection is unlikely to ever be fully solved."</p>
-      <p class="incident-quote-attr">OpenAI · December 2025</p>
-    </div>
-  </section>
-
-  <!-- ═══════════════════════════════════════════════════════════
-       §03 — COMPLIANCE GAP
-       ═══════════════════════════════════════════════════════════ -->
-  <section class="slide" data-section="Compliance Gap">
-    <div class="slide-title-block">
-      <div class="eyebrow">§03 · The compliance gap</div>
-      <h2 class="display display-lg">Three regimes. <em>Penalties stack.</em></h2>
-    </div>
-
-    <div class="regstack">
-      <div class="regrow">
-        <div class="regrow-label">MiCA</div>
-        <div class="regrow-body"><strong>Art. 68(7)</strong> — CASPs must run DORA-grade ICT systems.</div>
-      </div>
-      <div class="regrow">
-        <div class="regrow-label">DORA</div>
-        <div class="regrow-body"><strong>Art. 5(2)</strong> — management accountability is <em>non-delegable</em>.</div>
-      </div>
-      <div class="regrow">
-        <div class="regrow-label">EU AI Act</div>
-        <div class="regrow-body"><strong>Art. 14(4)(e)</strong> — a "stop button or similar procedure" must exist.</div>
-      </div>
-    </div>
-
-    <div class="penalty-panel">
+    <div class="penalty-panel" style="margin-top: 1.75rem;">
       <div class="penalty-cell">
         <div class="mono-label">AI Act</div>
         <div class="penalty-amount">€35M · 7%</div>
@@ -1539,6 +1641,101 @@ body::before {
   </section>
 
   <!-- ═══════════════════════════════════════════════════════════
+       §02 — INCIDENTS  (hero numbers)
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="slide" data-section="Problem Proof">
+    <div class="slide-title-block">
+      <div class="eyebrow">§02 · What is already breaking</div>
+      <h2 class="display display-lg">AI agents are already trading. <em>And losing.</em></h2>
+    </div>
+
+    <div class="incidents-hero">
+      <div class="incident-cell">
+        <svg class="incident-glyph" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="6" y="12" width="32" height="22" stroke="#C84E3A" stroke-width="1.2"/>
+          <line x1="6" y1="12" x2="38" y2="34" stroke="#C84E3A" stroke-width="1"/>
+          <line x1="38" y1="12" x2="6" y2="34" stroke="#C84E3A" stroke-width="1"/>
+          <text x="22" y="8" text-anchor="middle" fill="#C84E3A" font-family="JetBrains Mono" font-size="6" letter-spacing="1">WALLET</text>
+        </svg>
+        <div class="incident-loss">−$47K</div>
+        <div class="incident-name">Freysa</div>
+        <div class="incident-cause">Prompt injection</div>
+        <div class="incident-date">Nov 2024</div>
+      </div>
+      <div class="incident-cell">
+        <svg class="incident-glyph" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle cx="22" cy="22" r="13" stroke="#C84E3A" stroke-width="1.2"/>
+          <path d="M10 22 Q22 4 34 22 Q22 40 10 22 Z" stroke="#C84E3A" stroke-width="1" fill="none" opacity="0.6"/>
+          <circle cx="22" cy="22" r="3" fill="#C84E3A"/>
+        </svg>
+        <div class="incident-loss">−$100K</div>
+        <div class="incident-name">AIXBT</div>
+        <div class="incident-cause">Agent compromise</div>
+        <div class="incident-date">2025</div>
+      </div>
+      <div class="incident-cell">
+        <svg class="incident-glyph" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle cx="10" cy="14" r="3" stroke="#C84E3A" stroke-width="1.2"/>
+          <circle cx="34" cy="14" r="3" stroke="#C84E3A" stroke-width="1.2"/>
+          <circle cx="22" cy="34" r="3" fill="#C84E3A"/>
+          <line x1="12" y1="16" x2="20" y2="32" stroke="#C84E3A" stroke-width="1"/>
+          <line x1="32" y1="16" x2="24" y2="32" stroke="#C84E3A" stroke-width="1"/>
+          <line x1="13" y1="14" x2="31" y2="14" stroke="#C84E3A" stroke-width="1" stroke-dasharray="2 2"/>
+        </svg>
+        <div class="incident-loss">−$40M</div>
+        <div class="incident-name">Step Finance</div>
+        <div class="incident-cause">Supply-chain attack</div>
+        <div class="incident-date">Jan 2026</div>
+      </div>
+    </div>
+
+    <div class="incident-quote-block">
+      <p class="incident-quote">"Prompt injection is unlikely to ever be fully solved."</p>
+      <p class="incident-quote-attr">OpenAI · December 2025</p>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       §03 — COMPLIANCE GAP
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="slide" data-section="Existing Tools">
+    <div class="slide-title-block">
+      <div class="eyebrow">§03 · Why existing tools don't fit</div>
+      <h2 class="display display-md">The regs ask for oversight, audit trails, and a stop button. <em>No one enforces at the moment money moves.</em></h2>
+    </div>
+
+    <div class="gap-grid">
+      <div class="gap-card">
+        <div class="gap-vendor-label">Blockchain analytics</div>
+        <div class="gap-vendor-name">Chainalysis · TRM · Elliptic</div>
+        <div class="gap-vendor-sub">post-trade forensics</div>
+        <div class="gap-does">Scores transactions after they settle. Flags sanctioned addresses for SAR filing.</div>
+        <div class="gap-misses">No pre-trade veto. By the time the score lands, the funds are gone.</div>
+      </div>
+
+      <div class="gap-card">
+        <div class="gap-vendor-label">MPC custodians</div>
+        <div class="gap-vendor-name">Fireblocks · Copper · Cobo</div>
+        <div class="gap-vendor-sub">pre-trade policy, for humans</div>
+        <div class="gap-does">Policy engines gate withdrawals. Multi-party approvals over an MPC closed enclave.</div>
+        <div class="gap-misses">No on-chain verifiability, no AI-intent awareness, no KYT in-line.</div>
+      </div>
+
+      <div class="gap-card">
+        <div class="gap-vendor-label">AI governance</div>
+        <div class="gap-vendor-name">Guardrails · Lakera · Credo</div>
+        <div class="gap-vendor-sub">prompt &amp; output filters</div>
+        <div class="gap-does">Inspects what the LLM says. Catches toxic or off-policy text.</div>
+        <div class="gap-misses">Operates on tokens, not transactions. A jailbroken agent still owns the key.</div>
+      </div>
+    </div>
+
+    <div class="gap-conclusion">
+      Nobody sits between the LLM and the ledger. <em>That is the gap Signet fills.</em>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
        §04 — INSIGHT
        ═══════════════════════════════════════════════════════════ -->
   <section class="slide insight-slide" data-section="The Insight">
@@ -1547,6 +1744,30 @@ body::before {
     <p class="insight-followup">
       <strong>Signet</strong> is a mandatory co-signer on every agent transaction. Without its signature the quorum is not met, and <em>the protocol itself</em> refuses to settle. Compliance becomes a property of the ledger, not a policy a language model can be talked out of.
     </p>
+
+    <svg class="insight-visual" viewBox="0 0 640 160" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <g>
+        <text x="10" y="20" fill="#A8A39B" font-family="JetBrains Mono" font-size="10" letter-spacing="2">MIDDLEWARE · JAILBROKEN</text>
+        <rect x="10" y="30" width="280" height="110" fill="none" stroke="#C84E3A" stroke-width="0.8" stroke-dasharray="3 3"/>
+        <path d="M 10 30 L 150 100 L 10 140 M 290 30 L 180 70 L 290 140" stroke="#C84E3A" stroke-width="0.6" opacity="0.65"/>
+        <line x1="60" y1="30" x2="90" y2="140" stroke="#C84E3A" stroke-width="0.5" opacity="0.4"/>
+        <line x1="130" y1="30" x2="160" y2="140" stroke="#C84E3A" stroke-width="0.5" opacity="0.4"/>
+        <line x1="200" y1="30" x2="230" y2="140" stroke="#C84E3A" stroke-width="0.5" opacity="0.4"/>
+        <text x="150" y="85" text-anchor="middle" fill="#C84E3A" font-family="Fraunces" font-size="14" font-style="italic">bypassable</text>
+      </g>
+      <g transform="translate(350 0)">
+        <text x="10" y="20" fill="#A8A39B" font-family="JetBrains Mono" font-size="10" letter-spacing="2">CRYPTOGRAPHY · ENFORCED</text>
+        <rect x="10" y="30" width="280" height="110" fill="none" stroke="#7CA877" stroke-width="1"/>
+        <g stroke="#7CA877" stroke-width="0.8" fill="none">
+          <rect x="30" y="50" width="240" height="70"/>
+          <line x1="30" y1="85" x2="270" y2="85"/>
+          <line x1="150" y1="50" x2="150" y2="120"/>
+        </g>
+        <text x="90"  y="78" text-anchor="middle" fill="#7CA877" font-family="JetBrains Mono" font-size="9" letter-spacing="2">KEY_A</text>
+        <text x="210" y="78" text-anchor="middle" fill="#7CA877" font-family="JetBrains Mono" font-size="9" letter-spacing="2">KEY_B</text>
+        <text x="150" y="112" text-anchor="middle" fill="#F2EDE4" font-family="Fraunces" font-size="14" font-style="italic">2-of-2 quorum</text>
+      </g>
+    </svg>
   </section>
 
   <!-- ═══════════════════════════════════════════════════════════
@@ -1676,21 +1897,47 @@ body::before {
 
     <div class="primitives-grid">
       <div class="primitive">
+        <svg class="primitive-icon" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle cx="8"  cy="10" r="3" stroke="#D97757" stroke-width="1"/>
+          <circle cx="22" cy="10" r="3" stroke="#D97757" stroke-width="1"/>
+          <circle cx="15" cy="22" r="3" fill="#D97757"/>
+          <line x1="10" y1="12" x2="14" y2="20" stroke="#D97757" stroke-width="0.8"/>
+          <line x1="20" y1="12" x2="16" y2="20" stroke="#D97757" stroke-width="0.8"/>
+        </svg>
         <div class="primitive-name">Native Multisig</div>
         <div class="primitive-status">Long-live · no contracts</div>
         <div class="primitive-detail"><code>SignerListSet</code> · 32 signers, weighted quorum. <code>rippled</code> C++ rejects below-quorum transactions. No deployment surface, no audit burden.</div>
       </div>
       <div class="primitive">
+        <svg class="primitive-icon" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="6" y="6" width="18" height="22" stroke="#D97757" stroke-width="1"/>
+          <line x1="9" y1="12" x2="21" y2="12" stroke="#D97757" stroke-width="0.8"/>
+          <line x1="9" y1="16" x2="21" y2="16" stroke="#D97757" stroke-width="0.8"/>
+          <line x1="9" y1="20" x2="17" y2="20" stroke="#D97757" stroke-width="0.8"/>
+          <circle cx="21" cy="24" r="2" fill="#D97757"/>
+        </svg>
         <div class="primitive-name">Credentials</div>
         <div class="primitive-status">Live · September 2025</div>
         <div class="primitive-detail">On-ledger attestations of KYB / KYC. The signing layer can require them before releasing funds to a counterparty.</div>
       </div>
       <div class="primitive">
+        <svg class="primitive-icon" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle cx="15" cy="15" r="11" stroke="#D97757" stroke-width="1"/>
+          <path d="M4 15 Q15 6 26 15 Q15 24 4 15 Z" stroke="#D97757" stroke-width="0.8" fill="none" opacity="0.6"/>
+          <line x1="15" y1="4" x2="15" y2="26" stroke="#D97757" stroke-width="0.6" opacity="0.4"/>
+        </svg>
         <div class="primitive-name">Permissioned Domains</div>
         <div class="primitive-status">Live · February 2026</div>
         <div class="primitive-detail">Protocol-native gating of which accounts can transact in a given domain — MiCA-style whitelisting without application-layer trust.</div>
       </div>
       <div class="primitive">
+        <svg class="primitive-icon" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M6 15 L12 9 L24 9" stroke="#D97757" stroke-width="1" fill="none"/>
+          <path d="M6 15 L12 21 L24 21" stroke="#D97757" stroke-width="1" fill="none"/>
+          <circle cx="24" cy="9"  r="2" fill="#D97757"/>
+          <circle cx="24" cy="21" r="2" fill="#D97757"/>
+          <text x="6" y="27" fill="#D97757" font-family="JetBrains Mono" font-size="6">10 drops</text>
+        </svg>
         <div class="primitive-name">Sub-cent Fees</div>
         <div class="primitive-status">Base 10 drops</div>
         <div class="primitive-detail">2-of-2 multisigned transaction ≈ 30 drops. Fractions of a cent — high-frequency agent activity is economically viable.</div>
@@ -1742,11 +1989,61 @@ body::before {
   </section>
 
   <!-- ═══════════════════════════════════════════════════════════
-       §09 — COMPETITIVE LANDSCAPE
+       §09 — MARKET
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="slide" data-section="Market">
+    <div class="slide-title-block">
+      <div class="eyebrow">§09 · Market &amp; demand</div>
+      <h2 class="display display-md">The category sits at the intersection of three growing markets.</h2>
+    </div>
+
+    <div class="market-grid">
+      <div>
+        <div class="tam-item">
+          <div class="tam-label">TAM · AI in financial services</div>
+          <div class="tam-value">$38.4B <span class="growth">→ $190.3B</span></div>
+          <div class="tam-note">MarketsandMarkets · 2024 → 2030 · 30.6% CAGR</div>
+        </div>
+        <div class="tam-item">
+          <div class="tam-label">SAM · Blockchain RegTech</div>
+          <div class="tam-value">$7.3B <span class="growth">→ $29.5B</span></div>
+          <div class="tam-note">Virtue MR · 2024 → 2030</div>
+        </div>
+        <div class="tam-item">
+          <div class="tam-label">SOM · Directly addressable</div>
+          <div class="tam-value">$982B <span class="growth">AUM</span></div>
+          <div class="tam-note">PwC / AIMA 2025 · 122 institutional managers</div>
+        </div>
+      </div>
+
+      <div class="market-sidebar">
+        <div class="mono-label" style="margin-bottom: 0.75rem;">Signals</div>
+        <div class="sidebar-stat">
+          <div class="sidebar-stat-num">55%</div>
+          <div class="sidebar-stat-label">of traditional hedge funds now hold crypto — up from 29% in 2022</div>
+        </div>
+        <div class="sidebar-stat">
+          <div class="sidebar-stat-num">40%</div>
+          <div class="sidebar-stat-label">of enterprise apps will integrate AI agents by end-2026 (Gartner)</div>
+        </div>
+        <div class="sidebar-stat">
+          <div class="sidebar-stat-num">~102</div>
+          <div class="sidebar-stat-label">authorised CASPs — every one a MiCA + DORA dual filer</div>
+        </div>
+        <div class="sidebar-stat">
+          <div class="sidebar-stat-num">14</div>
+          <div class="sidebar-stat-label">beachhead: EU CASPs with full trading authorisation — DE · NL · MT</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       §10 — COMPETITIVE LANDSCAPE
        ═══════════════════════════════════════════════════════════ -->
   <section class="slide" data-section="Landscape">
     <div class="slide-title-block">
-      <div class="eyebrow">§09 · The white space</div>
+      <div class="eyebrow">§10 · The white space</div>
       <h2 class="display display-md">Five adjacent categories. <em>None cover the intersection.</em></h2>
     </div>
 
@@ -1805,56 +2102,6 @@ body::before {
         </tr>
       </tbody>
     </table>
-  </section>
-
-  <!-- ═══════════════════════════════════════════════════════════
-       §10 — MARKET
-       ═══════════════════════════════════════════════════════════ -->
-  <section class="slide" data-section="Market">
-    <div class="slide-title-block">
-      <div class="eyebrow">§10 · Market &amp; demand</div>
-      <h2 class="display display-md">The category sits at the intersection of three growing markets.</h2>
-    </div>
-
-    <div class="market-grid">
-      <div>
-        <div class="tam-item">
-          <div class="tam-label">TAM · AI in financial services</div>
-          <div class="tam-value">$38.4B <span class="growth">→ $190.3B</span></div>
-          <div class="tam-note">MarketsandMarkets · 2024 → 2030 · 30.6% CAGR</div>
-        </div>
-        <div class="tam-item">
-          <div class="tam-label">SAM · Blockchain RegTech</div>
-          <div class="tam-value">$7.3B <span class="growth">→ $29.5B</span></div>
-          <div class="tam-note">Virtue MR · 2024 → 2030</div>
-        </div>
-        <div class="tam-item">
-          <div class="tam-label">SOM · Directly addressable</div>
-          <div class="tam-value">$982B <span class="growth">AUM</span></div>
-          <div class="tam-note">PwC / AIMA 2025 · 122 institutional managers</div>
-        </div>
-      </div>
-
-      <div class="market-sidebar">
-        <div class="mono-label" style="margin-bottom: 0.75rem;">Signals</div>
-        <div class="sidebar-stat">
-          <div class="sidebar-stat-num">55%</div>
-          <div class="sidebar-stat-label">of traditional hedge funds now hold crypto — up from 29% in 2022</div>
-        </div>
-        <div class="sidebar-stat">
-          <div class="sidebar-stat-num">40%</div>
-          <div class="sidebar-stat-label">of enterprise apps will integrate AI agents by end-2026 (Gartner)</div>
-        </div>
-        <div class="sidebar-stat">
-          <div class="sidebar-stat-num">~102</div>
-          <div class="sidebar-stat-label">authorised CASPs — every one a MiCA + DORA dual filer</div>
-        </div>
-        <div class="sidebar-stat">
-          <div class="sidebar-stat-num">14</div>
-          <div class="sidebar-stat-label">beachhead: EU CASPs with full trading authorisation — DE · NL · MT</div>
-        </div>
-      </div>
-    </div>
   </section>
 
   <!-- ═══════════════════════════════════════════════════════════
