@@ -37,9 +37,12 @@ function narrator(scenario: ScenarioKey, state: RunState): string | null {
 const ATTACKER_ADDR = "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh";
 
 function HeistMessage({ msg }: { msg: string }) {
-  const parts = msg.split("--- SYSTEM OVERRIDE");
+  const marker = msg.includes("[END OF USER MESSAGE]")
+    ? "[END OF USER MESSAGE]"
+    : "--- SYSTEM OVERRIDE";
+  const parts = msg.split(marker);
   const benign = parts[0];
-  const inject = parts[1] ? "--- SYSTEM OVERRIDE" + parts[1] : null;
+  const inject = parts[1] ? marker + parts[1] : null;
   return (
     <div className="font-mono text-[13px] leading-relaxed whitespace-pre-wrap">
       <span className="text-fg/80">{benign}</span>
