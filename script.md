@@ -127,12 +127,12 @@ The channels that reach the customers we want already exist. We just need to be 
 Cue: This is the 10% compliance grade. Do it carefully.
 
 Let me close the compliance loop.
-MiCA requires secure IT systems for crypto service providers — our policy engine in an attested enclave satisfies that.
-DORA requires accountability can't be delegated to software. Our human-multisig tier — where a board of humans has to approve policy changes — satisfies that.
-AI Act Article 14 requires a "stop button." Ours is literally one on-chain transaction that revokes the AI's signing authority instantly.
-GDPR — personal data can't go on-chain. Ours doesn't — only hashes do.
-Product Liability Directive — companies need defensible evidence of reasonable care. Our audit trail is that evidence.
-Every obligation maps to a specific feature of the product.
+MiCA requires secure IT systems for crypto service providers — our policy engine holds one of the two keys required to move funds, so no transaction settles without it.
+DORA requires accountability can't be delegated to software. Whenever a trade crosses the autonomous threshold, it escalates to a named human approver whose signature is recorded on-chain — the ledger carries human accountability, not just a software decision. You'll see this live in scenario C.
+AI Act Article 14 requires a "stop button." Ours is literally one on-chain transaction — a SignerListSet update that removes the agent's key and freezes the account instantly.
+GDPR — personal data can't go on-chain. Ours doesn't — only a Merkle hash of the reasoning goes in the memo; the full trace stays off-chain.
+Product Liability Directive — companies need defensible evidence of reasonable care. Every decision the agent makes produces a signed, timestamped trail anchored on the ledger. That's the evidence.
+Every obligation maps to a specific feature already in the demo.
 
 
 §13 — What we're honest about (45s)
