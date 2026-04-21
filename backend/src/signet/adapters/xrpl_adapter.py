@@ -110,6 +110,13 @@ class XRPLAdapter:
         self.wallets = wallets
         self.client = client or JsonRpcClient(TESTNET_JSON_RPC)
 
+    def get_balance_xrp(self, address: str) -> float:
+        try:
+            r = self.client.request(AccountInfo(account=address, ledger_index="validated"))
+            return int(r.result["account_data"]["Balance"]) / 1_000_000
+        except Exception:
+            return 0.0
+
     def build_payment(self, intent: Intent, merkle_root_hex: str) -> Payment:
         if intent.action != IntentAction.PAYMENT:
             raise ValueError("only payment intents supported")

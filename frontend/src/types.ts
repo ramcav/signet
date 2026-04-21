@@ -42,6 +42,7 @@ export interface Health {
   policy: string;
   allowlist: string[];
   xrp_usd: number;
+  master_balance_xrp: number;
 }
 
 export type ScenarioKey = "A" | "B" | "C";

@@ -98,6 +98,7 @@ def build_app() -> FastAPI:
     # ── routes ──────────────────────────────────────────────────────────────
     @app.get("/health")
     def health():
+        master_balance = xrpl.get_balance_xrp(wallets.master.classic_address)
         return {
             "ok": True,
             "master": wallets.master.classic_address,
@@ -105,6 +106,7 @@ def build_app() -> FastAPI:
             "policy": wallets.policy.classic_address,
             "allowlist": list(policy_config.allowlist_destinations),
             "xrp_usd": policy_config.price_table["XRP"],
+            "master_balance_xrp": master_balance,
         }
 
     @app.post("/intents", status_code=202)

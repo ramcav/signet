@@ -41,6 +41,14 @@ export function Header({
             <span>${health.xrp_usd.toFixed(4)}</span>
             <span className="text-muted ml-2">master</span>
             <span>{truncMid(health.master, 6, 6)}</span>
+            {typeof health.master_balance_xrp === "number" && (
+              <>
+                <span className="text-muted ml-2">balance</span>
+                <span className={health.master_balance_xrp < 1000 ? "text-fail" : "text-pass"}>
+                  {health.master_balance_xrp.toLocaleString(undefined, { maximumFractionDigits: 0 })} XRP
+                </span>
+              </>
+            )}
           </div>
         ) : (
           <div className="text-xs font-mono text-muted border border-border rounded-lg px-3 py-2">
