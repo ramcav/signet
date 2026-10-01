@@ -9,8 +9,8 @@ from __future__ import annotations
 import json
 import logging
 import os
+from decimal import Decimal
 from dataclasses import dataclass, field
-from typing import Optional
 
 from openai import OpenAI
 
@@ -55,7 +55,7 @@ TOOLS = [
                     },
                     "asset": {
                         "type": "string",
-                        "description": "Asset code, e.g. XRP or RLUSD.",
+                        "description": "Native XRP is the only supported asset.",
                     },
                     "rationale": {
                         "type": "string",
@@ -106,7 +106,12 @@ class OpenAIAgentAdapter:
         if not choice.message.tool_calls:
             raise RuntimeError(f"agent failed to call tool: {choice.message.content!r}")
         call = choice.message.tool_calls[0]
-        args = json.loads(call.function.arguments)
+        args = json.loads(call.function.arguments, parse_float=Decimal)
+        if not isinstance(args, dict):
+            raise ValueError("payment arguments must be an object")
+        for key in ("destination", "asset", "rationale"):
+            if not isinstance(args.get(key), str) or not args[key].strip():
+                raise ValueError(f"{key} must be a nonempty string")
         raw_message = choice.message.content or ""
 
         trace = (
@@ -117,14 +122,14 @@ class OpenAIAgentAdapter:
             .append(f"tool_call:submit_payment:{call.function.arguments}")
         )
 
-        raw_dest = str(args["destination"])
+        raw_dest = args["destination"]
         resolved_dest = self._resolve_destination(raw_dest)
 
         intent = Intent(
             action=IntentAction.PAYMENT,
             from_account=self.master_address,
             to_account=resolved_dest,
-            amount=float(args["amount"]),
+            amount=args["amount"],
             asset=args["asset"].upper(),
             rationale=args.get("rationale", ""),
             raw_agent_output=call.function.arguments,

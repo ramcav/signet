@@ -114,11 +114,11 @@ class TestCaps:
 
 class TestEscalation:
     def test_large_notional_escalates(self, engine: PolicyEngine):
-        # 500k XRP * 0.5 = 250k > escalation threshold 100k
-        # but also exceeds per_tx_cap. Raise per_tx_cap for this test.
-        engine.config.price_table["XRP"] = 0.5
-        # use RLUSD to cleanly exceed escalation threshold within per-tx shape
-        pass
+        result = engine.evaluate(intent(amount=500_000))
+        assert result.decision == Decision.ESCALATE
+        assert result.notional_usd == 250_000
+        assert all(check.passed for check in result.checks)
+        assert "threshold" in result.reason
 
     def test_escalates_when_over_threshold_only(self, config):
         # Build engine with a per_tx_cap >= notional but escalation threshold lower.
@@ -175,3 +175,28 @@ class TestEvaluationResult:
         r2 = engine.evaluate(i)
         assert r1.decision == r2.decision
         assert [c.name for c in r1.checks] == [c.name for c in r2.checks]
+
+
+@pytest.mark.parametrize("asset", ["BTC", "RLUSD", "UNKNOWN"])
+def test_unpriced_or_unsupported_asset_is_structured_refusal(engine, asset):
+    result = engine.evaluate(intent(asset=asset))
+    assert result.decision == Decision.REFUSE
+    assert not _check(result, "allowlist_asset").passed
+    assert result.reason
+
+
+def test_missing_xrp_price_is_structured_refusal(engine):
+    engine.config.price_table.clear()
+    result = engine.evaluate(intent())
+    assert result.decision == Decision.REFUSE
+    assert not _check(result, "price_available").passed
+
+
+@pytest.mark.parametrize("value", [True, 0, -1, float("nan"), float("inf")])
+@pytest.mark.parametrize("field", ["per_tx_cap_usd", "daily_cap_usd", "escalation_tier_threshold_usd", "xrp_usd_price"])
+def test_config_rejects_invalid_numeric_values(field, value):
+    from signet.domain import PolicyConfig
+    data = dict(allowlist_destinations=[TREASURY], allowlist_assets=["XRP"], per_tx_cap_usd=10, daily_cap_usd=100, escalation_tier_threshold_usd=50, xrp_usd_price=1)
+    data[field] = value
+    with pytest.raises(ValueError):
+        PolicyConfig.from_dict(data)

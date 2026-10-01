@@ -3,9 +3,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Callable, Protocol
+from typing import Protocol
 
 from .intent import Intent
+from .numbers import positive_float
 
 
 class RuleStatus(str, Enum):
@@ -50,16 +51,27 @@ class PolicyConfig:
     daily_cap_usd: float
     escalation_tier_threshold_usd: float
     price_table: dict[str, float] = field(default_factory=dict)
+    version: str = "1"
+
+    def __post_init__(self) -> None:
+        for name in ("per_tx_cap_usd", "daily_cap_usd", "escalation_tier_threshold_usd"):
+            object.__setattr__(self, name, positive_float(getattr(self, name), name))
+        object.__setattr__(self, "price_table", {
+            asset: positive_float(price, f"price for {asset}") for asset, price in self.price_table.items()
+        })
+        if not isinstance(self.version, str) or not self.version:
+            raise ValueError("policy version required")
 
     @classmethod
     def from_dict(cls, d: dict) -> "PolicyConfig":
         return cls(
             allowlist_destinations=frozenset(d["allowlist_destinations"]),
             allowlist_assets=frozenset(d["allowlist_assets"]),
-            per_tx_cap_usd=float(d["per_tx_cap_usd"]),
-            daily_cap_usd=float(d["daily_cap_usd"]),
-            escalation_tier_threshold_usd=float(d["escalation_tier_threshold_usd"]),
-            price_table={"XRP": float(d.get("xrp_usd_price", 0.5)), "RLUSD": 1.0},
+            per_tx_cap_usd=d["per_tx_cap_usd"],
+            daily_cap_usd=d["daily_cap_usd"],
+            escalation_tier_threshold_usd=d["escalation_tier_threshold_usd"],
+            price_table={"XRP": d["xrp_usd_price"]} if "xrp_usd_price" in d else {},
+            version=str(d.get("version", "1")),
         )
 
 
@@ -88,14 +100,20 @@ class PolicyEngine:
     daily_spent_usd: float = 0.0
 
     def evaluate(self, intent: Intent) -> EvaluationResult:
-        notional = intent.notional_usd(self.config.price_table)
-        requires_escalation = notional >= self.config.escalation_tier_threshold_usd
-
         checks: list[RuleCheck] = []
         # Integrity rules apply to every tier.
         checks.append(self._check_destination(intent))
         checks.append(self._check_asset(intent))
         checks.append(self._check_kyt(intent))
+        try:
+            notional = intent.notional_usd(self.config.price_table)
+        except (KeyError, ValueError, ArithmeticError) as exc:
+            checks.append(RuleCheck("price_available", RuleStatus.FAIL, str(exc)))
+            return EvaluationResult(
+                decision=Decision.REFUSE, checks=tuple(checks), notional_usd=0.0,
+                reason="; ".join(check.detail for check in checks if not check.passed),
+            )
+        requires_escalation = notional >= self.config.escalation_tier_threshold_usd
         # Quantitative caps apply only to the instant tier; over-threshold
         # trades are routed to human approval and evaluated under a
         # different authority.
@@ -127,7 +145,7 @@ class PolicyEngine:
         )
 
     def record_spend(self, usd: float) -> None:
-        self.daily_spent_usd += usd
+        self.daily_spent_usd += positive_float(usd, "spend")
 
     # rules
     def _check_destination(self, intent: Intent) -> RuleCheck:
@@ -143,14 +161,14 @@ class PolicyEngine:
         )
 
     def _check_asset(self, intent: Intent) -> RuleCheck:
-        ok = intent.asset in self.config.allowlist_assets
+        ok = intent.asset == "XRP" and intent.asset in self.config.allowlist_assets
         return RuleCheck(
             name="allowlist_asset",
             status=RuleStatus.PASS if ok else RuleStatus.FAIL,
             detail=(
                 f"asset {intent.asset} on allowlist"
                 if ok
-                else f"asset {intent.asset} NOT on allowlist"
+                else f"asset {intent.asset} is not allowed or supported (native XRP only)"
             ),
         )
 
