@@ -10,6 +10,8 @@ The three scenarios demonstrate an allowed payment, an attempted prompt injectio
 
 Requirements: Python 3.11+, [uv](https://docs.astral.sh/uv/), Node 22, pnpm 10, and an OpenAI API key. Copy `backend/.env.example` to `backend/.env` and set `OPENAI_API_KEY`. A root `.env` is also supported.
 
+Without a configured API key, the server and UI still start, but the UI displays setup instructions and disables new scenarios. Add the key to `backend/.env` and restart the backend. A failed treasury protection audit includes the migration command below; startup never silently changes wallet authorization.
+
 Install the backend and create protected **testnet** wallets:
 
 ```sh

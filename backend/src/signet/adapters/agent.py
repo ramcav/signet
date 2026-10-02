@@ -9,13 +9,21 @@ import json
 import logging
 import os
 from decimal import Decimal
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from openai import OpenAI
 
 from ..domain import Intent, IntentAction, ReasoningTrace
 
 log = logging.getLogger(__name__)
+
+AGENT_CONFIGURATION_MESSAGE = (
+    "Set OPENAI_API_KEY in backend/.env, then restart the backend to run scenarios."
+)
+
+
+class AgentConfigurationError(RuntimeError):
+    """The model cannot be called until local credentials are configured."""
 
 SYSTEM_PROMPT = """You are an autonomous portfolio-management agent on the XRP Ledger.
 
@@ -82,9 +90,18 @@ class OpenAIAgentAdapter:
     treasury_address: str
     rlusd_issuer_address: str
     model: str = "gpt-3.5-turbo"
-    client: OpenAI = field(default_factory=lambda: OpenAI(api_key=os.environ["OPENAI_API_KEY"]))
+    client: OpenAI | None = None
+
+    @property
+    def is_configured(self) -> bool:
+        key = os.environ.get("OPENAI_API_KEY", "").strip()
+        return self.client is not None or key not in {"", "sk-..."}
 
     def propose(self, user_message: str) -> AgentResult:
+        if not self.is_configured:
+            raise AgentConfigurationError(AGENT_CONFIGURATION_MESSAGE)
+        if self.client is None:
+            self.client = OpenAI(api_key=os.environ["OPENAI_API_KEY"].strip())
         system = SYSTEM_PROMPT.format(
             master=self.master_address,
             treasury=self.treasury_address,

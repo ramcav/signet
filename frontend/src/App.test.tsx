@@ -44,6 +44,35 @@ async function begin(scenario = "A") {
 }
 
 describe("application event and request handling", () => {
+  it.each([
+    undefined,
+    "Configure the agent API key before submitting a payment.",
+  ])("shows missing agent setup and prevents new runs (%s)", async (configurationError) => {
+    fetchMock.mockResolvedValue(response({ agent_configured: false, configuration_error: configurationError }));
+    render(<App />);
+    expect(await screen.findByRole("alert")).toHaveTextContent(configurationError ?? "Set OPENAI_API_KEY in backend/.env, then restart the backend to run scenarios.");
+    const run = screen.getByRole("button", { name: "Setup required" });
+    expect(run).toBeDisabled();
+    fireEvent.click(run);
+    expect(fetchMock.mock.calls.some(([url]) => url === "/intents")).toBe(false);
+  });
+
+  it("prevents recovering an unconfirmed request when health reports missing setup", async () => {
+    let finishHealth: (value: unknown) => void = () => {};
+    fetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
+      if (url === "/health") return new Promise(resolve => { finishHealth = resolve; });
+      if (url === "/intents") requestId = JSON.parse(init!.body as string).run_id;
+      throw new TypeError("Network disconnected");
+    });
+    await begin();
+    expect(await screen.findByRole("button", { name: "Recover original request" })).toBeEnabled();
+    await act(async () => finishHealth(response({ agent_configured: false })));
+    const recover = screen.getByRole("button", { name: "Recover original request" });
+    expect(recover).toBeDisabled();
+    fireEvent.click(recover);
+    expect(fetchMock.mock.calls.filter(([url]) => url === "/intents")).toHaveLength(1);
+  });
+
   it("keeps Run disabled while an approved payment is submitting", async () => {
     await begin("C");
     MockEventSource.current.emit("policy.escalated", requestId, { escalation_id: "esc", reason: "Over limit", notional_usd: 500, intent: { from: "source", to: "dest", amount: 100, asset: "XRP", rationale: "rebalance" } });

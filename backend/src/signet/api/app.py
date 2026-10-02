@@ -18,10 +18,10 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
 
-from ..adapters.agent import OpenAIAgentAdapter
+from ..adapters.agent import AGENT_CONFIGURATION_MESSAGE, OpenAIAgentAdapter
 from ..adapters.audit_store import AuditStore
 from ..adapters.prices import PriceService, PriceUnavailable
-from ..adapters.xrpl_adapter import XRPLAdapter, load_wallets
+from ..adapters.xrpl_adapter import WalletProtectionError, XRPLAdapter, load_wallets
 from ..application import ApproveEscalationUseCase, EscalationRegistry, Event, EventBus, SubmitIntentUseCase
 from ..application.use_cases import EscalationBusy, _tx_dict
 from ..domain import PolicyConfig, PolicyEngine
@@ -39,6 +39,7 @@ class Services:
     bus: EventBus
     store: AuditStore
     health: Callable[[], dict]
+    configuration_error: Callable[[], str | None] = lambda: None
 
 
 class IntentRequest(BaseModel):
@@ -57,7 +58,15 @@ def compose_services() -> Services:
     config = replace(config, allowlist_destinations=frozenset({wallets.agent.classic_address}))
     xrpl = XRPLAdapter(wallets)
     # Read-only startup audit. Account changes require the explicit setup script.
-    xrpl.assert_protected()
+    try:
+        xrpl.assert_protected()
+    except WalletProtectionError as exc:
+        raise WalletProtectionError(
+            f"Treasury protection audit failed: {exc}. "
+            "To configure or resume the saved testnet wallets, run "
+            "`uv run python ../scripts/fund_wallets.py --secure-existing` from backend/, "
+            "then restart the server. Keep the existing wallets.json and its saved keys."
+        ) from exc
     demo_price = os.environ.get("SIGNET_DEMO_XRP_USD")
     quotes = PriceService(demo_price=float(demo_price) if demo_price is not None else None)
     engine = PolicyEngine(config, InMemoryKYT())
@@ -68,12 +77,17 @@ def compose_services() -> Services:
     submit = SubmitIntentUseCase(agent=agent, **common)
     approve = ApproveEscalationUseCase(**common)
 
+    def configuration_error():
+        return None if agent.is_configured else AGENT_CONFIGURATION_MESSAGE
+
     def health():
         result = {"ok": True, "master": wallets.master.classic_address,
                   "agent": wallets.agent.classic_address, "policy": wallets.policy.classic_address,
                   "allowlist": sorted(config.allowlist_destinations), "wallet_protected": True,
                   "master_balance_xrp": xrpl.get_balance_xrp(wallets.master.classic_address),
-                  "xrp_usd": None, "quote": None}
+                  "xrp_usd": None, "quote": None,
+                  "agent_configured": agent.is_configured,
+                  "configuration_error": configuration_error()}
         try:
             quote = quotes.get_quote()
             result.update(xrp_usd=quote.price_usd, quote=quote.to_dict())
@@ -81,7 +95,7 @@ def compose_services() -> Services:
             result["quote_error"] = str(exc)
         return result
 
-    return Services(submit, approve, bus, store, health)
+    return Services(submit, approve, bus, store, health, configuration_error)
 
 
 def build_app(services: Services | None = None) -> FastAPI:
@@ -124,6 +138,8 @@ def build_app(services: Services | None = None) -> FastAPI:
     @app.post("/intents", status_code=202)
     async def submit_intent(req: IntentRequest):
         svc = current()
+        if error := svc.configuration_error():
+            raise HTTPException(status_code=503, detail=error)
         run_id = req.run_id or uuid4().hex
         try:
             accepted = svc.store.accept_run(run_id, req.model_dump(exclude={"run_id"}))

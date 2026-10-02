@@ -54,6 +54,8 @@ export interface SignetEvent {
 }
 
 export interface Health {
+  agent_configured?: boolean;
+  configuration_error?: string | null;
   master: string;
   agent: string;
   policy: string;

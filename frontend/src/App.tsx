@@ -57,6 +57,7 @@ export default function App() {
   const starting = useRef(new Set<ScenarioKey>());
   const [health, setHealth] = useState<Health | null>(null);
   const [cinematic, setCinematic] = useState(false);
+  const setupRequired = health?.agent_configured === false;
 
   // Map runId -> scenario key so events route even if user switches tabs.
   const runIdToScenario = useRef<Map<string, ScenarioKey>>(new Map());
@@ -100,6 +101,7 @@ export default function App() {
   }, reconcileRuns);
 
   const runScenario = async (key: ScenarioKey) => {
+    if (setupRequired) return;
     if (starting.current.has(key) || actionRequests.current.has(states[key].runId ?? "") || states[key].inFlight || states[key].needsReconciliation || states[key].escalationStatus === "pending") return;
     const cfg = SCENARIOS[key];
     const runId = crypto.randomUUID().replace(/-/g, "");
@@ -112,7 +114,7 @@ export default function App() {
   };
 
   const sendIntent = async (key: ScenarioKey, runId: string) => {
-    if (starting.current.has(key)) return;
+    if (setupRequired || starting.current.has(key)) return;
     starting.current.add(key);
     const cfg = SCENARIOS[key];
     let refusedRequest = false;
@@ -204,8 +206,9 @@ export default function App() {
       />
       <Tabs active={active} onChange={setActive} />
       <div role="tabpanel" id={`scenario-panel-${active}`} aria-labelledby={`scenario-tab-${active}`} className="px-4 sm:px-8 py-6 min-w-0">
+        {setupRequired && <p role="alert" className="mb-4 border border-fail rounded-lg p-3 text-sm text-fail">{health.configuration_error || "Set OPENAI_API_KEY in backend/.env, then restart the backend to run scenarios."}</p>}
         {(state.error || state.actionError) && <p role="alert" className="mb-4 border border-fail rounded-lg p-3 text-sm text-fail">{state.error || state.actionError}</p>}
-        {state.runId && state.requestUnconfirmed && <button className="block text-sm text-accent underline mb-4" onClick={() => void sendIntent(active, state.runId!)}>Recover original request</button>}
+        {state.runId && state.requestUnconfirmed && <button disabled={setupRequired} className="block text-sm text-accent underline mb-4 disabled:text-muted disabled:cursor-not-allowed" onClick={() => void sendIntent(active, state.runId!)}>Recover original request</button>}
         {state.runId && (state.inFlight || state.needsReconciliation || state.actionError) && <button className="block text-sm text-accent underline mb-4" onClick={() => void reconcileRun(state.runId!, active)}>Check run status</button>}
         {state.runId && state.merkleRoot && <a href={`/runs/${encodeURIComponent(state.runId)}/receipt`} download className="inline-block text-sm text-accent underline mb-4">Download run receipt (JSON)</a>}
         <p className="text-sm text-muted mb-6 max-w-2xl">{cfg.blurb}</p>
@@ -219,6 +222,7 @@ export default function App() {
               inFlight={state.inFlight || escalationBusy}
               approvalPending={state.escalationStatus === "pending"}
               needsReconciliation={state.needsReconciliation}
+              setupRequired={setupRequired}
               onRun={() => runScenario(active)}
             />
             <RawAgentOutput raw={state.rawAgentOutput} thinking={state.thinking} />
