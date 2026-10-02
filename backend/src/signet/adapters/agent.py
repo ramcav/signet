@@ -1,8 +1,7 @@
 """Agent adapter — OpenAI tool calling produces an Intent.
 
-This is where Scenario B's jailbreak is *genuine*: the user message is an
-injection, the LLM actually obeys it, and the policy engine catches the
-malicious intent downstream. Do not stub this.
+Scenario B supplies a real prompt-injection attempt. Model behavior varies;
+the deterministic policy engine evaluates whichever intent it produces.
 """
 from __future__ import annotations
 

@@ -1,5 +1,7 @@
 # Signet — Demo MVP Build Brief
 
+> Historical prototype brief. See [README.md](README.md) for current behavior, setup and limitations. References below to attestation, human signatures, archival storage and selective proofs are design goals, not shipped guarantees.
+
 A one-day, end-to-end prototype that demonstrates **cryptographic pre-trade compliance for AI agents on XRPL testnet**. Built to support a 15-minute pitch where the jury sees an AI agent attempt a benign trade (succeeds), a jailbroken trade (policy engine refuses, ledger refuses), and an over-threshold trade (escalates to human approval).
 
 The demo is the 40% product-demo grade. It must feel real — real LLM calls, real XRPL testnet transactions, real multisig enforcement. Not a simulation.

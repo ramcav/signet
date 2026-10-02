@@ -1515,6 +1515,11 @@ body::before {
 </style>
 </head>
 <body>
+<aside style="padding:12px 24px;border-bottom:1px solid currentColor;font-size:14px;">
+  Prototype pitch and roadmap. The local demo uses mock KYT and operator approval;
+  TEE attestation, authenticated human co-signatures and selective disclosure are future work.
+  See the repository README for current guarantees and setup.
+</aside>
 
 <div class="chrome-progress" id="progress"></div>
 
@@ -1669,7 +1674,7 @@ body::before {
     <div class="eyebrow">§04 · The insight</div>
     <h2 class="insight-statement">Software middleware can be <em>jailbroken</em>.<br>Cryptography cannot.</h2>
     <p class="insight-followup">
-      <strong>Signet</strong> is a mandatory co-signer on every agent transaction. Without its signature the quorum is not met, and <em>the protocol itself</em> refuses to settle. Compliance becomes a property of the ledger, not a policy a language model can be talked out of.
+      <strong>Signet</strong> configures its testnet treasury to require both signing keys, with master-key authorization disabled and no RegularKey. Without both signatures, <em>the protocol itself</em> refuses authorization. The policy runs off-chain; the ledger enforces the signing requirement, not regulatory compliance.
     </p>
 
     <svg class="insight-visual" viewBox="0 0 640 160" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -1729,7 +1734,7 @@ body::before {
         <rect x="860" y="30" width="300" height="130" fill="none" stroke="#D97757" stroke-width="1"/>
         <text x="880" y="58" fill="#7CA877" font-family="JetBrains Mono" font-size="10" letter-spacing="2">POLICY ENGINE · CO-SIGNER</text>
         <text x="880" y="98" fill="#F2EDE4" font-family="Fraunces" font-size="26" font-style="italic">Rules + key</text>
-        <text x="880" y="126" fill="#A8A39B" font-family="Instrument Sans" font-size="13">v0: separate process · v1: HSM / TEE (Nitro · SGX · TDX)</text>
+        <text x="880" y="126" fill="#A8A39B" font-family="Instrument Sans" font-size="13">Demo: same process · HSM / TEE: roadmap</text>
         <g transform="translate(955, 175)">
           <rect width="110" height="28" fill="#D97757" stroke="#D97757" stroke-width="1"/>
           <text x="55" y="19" text-anchor="middle" fill="#0B0A09" font-family="JetBrains Mono" font-size="11" font-weight="500">◆ key_b</text>
@@ -1741,7 +1746,7 @@ body::before {
         <rect x="400" y="110" width="400" height="118" fill="#14120F" stroke="#D97757" stroke-width="1"/>
         <text x="420" y="136" fill="#D97757" font-family="JetBrains Mono" font-size="10" letter-spacing="2">DETERMINISTIC RULES · evaluated per-intent</text>
         <text x="420" y="164" fill="#F2EDE4" font-family="JetBrains Mono" font-size="12">notional caps · allowlists · daily velocity</text>
-        <text x="420" y="184" fill="#F2EDE4" font-family="JetBrains Mono" font-size="12">KYT / AML · sanctions  (roadmap: VaR · slippage)</text>
+        <text x="420" y="184" fill="#F2EDE4" font-family="JetBrains Mono" font-size="12">mock KYT  (roadmap: real feeds · VaR · slippage)</text>
         <text x="420" y="212" fill="#A8A39B" font-family="JetBrains Mono" font-size="11">tier: INSTANT · HUMAN · REFUSE  (roadmap: NOTIFY · DELAY)</text>
 
         <line x1="190" y1="210" x2="190" y2="322" stroke="#D97757" stroke-width="1.5" marker-end="url(#arrow)"/>
@@ -1754,17 +1759,17 @@ body::before {
         <text x="60" y="383" fill="#F2EDE4" font-family="Fraunces" font-size="15" font-style="italic">rippled rejects any transaction below quorum weight — protocol-level enforcement, no smart-contract surface</text>
 
         <line x1="600" y1="397" x2="600" y2="428" stroke="#8A8680" stroke-width="1" marker-end="url(#arrowDim)"/>
-        <text x="600" y="452" text-anchor="middle" fill="#A8A39B" font-family="JetBrains Mono" font-size="11">settled tx · memo: reasoningCommit = MerkleRoot(trace)</text>
+        <text x="600" y="452" text-anchor="middle" fill="#A8A39B" font-family="JetBrains Mono" font-size="11">memo: signet/payment-receipt/v1 · SHA-256 of canonical receipt</text>
       </svg>
 
       <div class="arch-legend">
         <div class="arch-legend-item">
           <strong>Two-of-two quorum</strong>
-          A jailbroken agent can propose anything — without key_b's signature, the protocol refuses.
+          An injected prompt can change a proposal. Both signer keys share one backend process; a compromised backend is outside this demo's isolation guarantees.
         </div>
         <div class="arch-legend-item">
-          <strong>Revocation in one transaction</strong>
-          Single on-chain <code style="font-family:var(--font-mono);color:var(--accent);">SignerListSet</code> updates the quorum. No re-deploys.
+          <strong>Authorized signer updates</strong>
+          An authorized <code style="font-family:var(--font-mono);color:var(--accent);">SignerListSet</code> can update the quorum. In this demo, authorization requires both existing keys.
         </div>
       </div>
     </div>
@@ -1775,40 +1780,40 @@ body::before {
        ═══════════════════════════════════════════════════════════ -->
   <section class="slide" data-section="Transaction Flow">
     <div class="slide-title-block">
-      <div class="eyebrow">§06 · A compliant trade, end to end</div>
-      <h2 class="display display-md">Six steps. Each produces <em>an artefact a regulator can query</em>.</h2>
+      <div class="eyebrow">§06 · A permitted payment, end to end</div>
+      <h2 class="display display-md">Six steps. A receipt records <em>the proposal and decision</em>.</h2>
     </div>
 
     <div class="flow-grid">
       <div class="flow-step">
         <div class="flow-num">01 · PROPOSE</div>
         <div class="flow-title">Agent emits a typed intent</div>
-        <div class="flow-desc">Structured decision. Typed JSON tool-call binds intent to policy version.</div>
+        <div class="flow-desc">A typed JSON tool-call proposes a native XRP payment. The receipt binds the resolved intent to the policy version.</div>
       </div>
       <div class="flow-step">
         <div class="flow-num">02 · EVALUATE</div>
         <div class="flow-title">Policy engine runs the rules</div>
-        <div class="flow-desc">Notional caps, allowlists, daily velocity, KYT score, sanctions — deterministic, per-intent.</div>
+        <div class="flow-desc">Asset, destination, USD limits and a mock KYT score are checked deterministically. Real sanctions feeds remain future work.</div>
       </div>
       <div class="flow-step">
         <div class="flow-num">03 · ROUTE</div>
         <div class="flow-title">Escalation tier decides</div>
-        <div class="flow-desc">INSTANT co-signs. HUMAN routes to a clear-signing UI. Roadmap: NOTIFY, DELAY tiers.</div>
+        <div class="flow-desc">INSTANT permits signing. HUMAN requests local operator approval; REFUSE blocks signing. Approval endpoints have no authentication.</div>
       </div>
       <div class="flow-step">
         <div class="flow-num">04 · CO-SIGN</div>
-        <div class="flow-title">Policy key signs in the enclave</div>
-        <div class="flow-desc">Separate-process co-signer; agent cannot access the key. Roadmap: TEE attestation binds the signature to a known binary.</div>
+        <div class="flow-title">Both keys sign in the backend</div>
+        <div class="flow-desc">Agent and policy keys share the same process. Separate signing services, HSM / TEE isolation and attestation are roadmap items.</div>
       </div>
       <div class="flow-step">
         <div class="flow-num">05 · SETTLE</div>
         <div class="flow-title">XRPL enforces the quorum natively</div>
-        <div class="flow-desc">2-of-2 multisigned transaction costs ~30 drops. Protocol, not contract, validates.</div>
+        <div class="flow-desc">The adapter submits the multisigned payment. Only validated tesSUCCESS is displayed as settlement; a timeout remains unknown.</div>
       </div>
       <div class="flow-step">
         <div class="flow-num">06 · ATTEST</div>
-        <div class="flow-title">Merkle commit lands on-chain</div>
-        <div class="flow-desc">Memo carries reasoningCommit. Full trace persists off-chain for regulator disclosure.</div>
+        <div class="flow-title">Receipt commitment travels with payment</div>
+        <div class="flow-desc">The signet/payment-receipt/v1 memo carries a domain-separated SHA-256 commitment to the canonical receipt. JSON export supports offline verification.</div>
       </div>
     </div>
   </section>
@@ -1884,15 +1889,15 @@ body::before {
     <div class="attest-pipeline">
       <div class="attest-row">
         <div class="attest-stage">01</div>
-        <div class="attest-what">Reasoning trace captured</div>
-        <div class="attest-how">{prompt, context, tools, reasoning, intent}</div>
-        <div class="attest-where">Structured, signed, timestamped by the runtime.</div>
+        <div class="attest-what">Recorded agent evidence captured</div>
+        <div class="attest-how">Resolved payment, policy, quote and recorded agent evidence</div>
+        <div class="attest-where">Portable receipt; no claim about private model reasoning.</div>
       </div>
       <div class="attest-row">
         <div class="attest-stage">02</div>
-        <div class="attest-what">Hashed into a Merkle root</div>
-        <div class="attest-how">reasoningCommit = MerkleRoot(chunks)</div>
-        <div class="attest-where">Client-side. Selective disclosure per chunk.</div>
+        <div class="attest-what">Canonical receipt committed</div>
+        <div class="attest-how">Versioned, domain-separated SHA-256</div>
+        <div class="attest-where">Server-side. Offline verification against an independent memo.</div>
       </div>
       <div class="attest-row">
         <div class="attest-stage">03</div>
@@ -1902,13 +1907,13 @@ body::before {
       </div>
       <div class="attest-row">
         <div class="attest-stage">04</div>
-        <div class="attest-what">Full trace persists off-chain</div>
-        <div class="attest-how">S3 Object Lock · IPFS / Filecoin</div>
-        <div class="attest-where">EDPB 02/2025: no personal data on-chain.</div>
+        <div class="attest-what">Full receipt persists off-chain</div>
+        <div class="attest-how">Local SQLite and JSON export</div>
+        <div class="attest-where">WORM and decentralized archival are roadmap items.</div>
       </div>
       <div class="attest-row">
         <div class="attest-stage">05</div>
-        <div class="attest-what">Regulator disclosure</div>
+        <div class="attest-what">Selective disclosure — roadmap</div>
         <div class="attest-how">Merkle proof · signed access token</div>
         <div class="attest-where">Only what is asked. Strategy stays private.</div>
       </div>
@@ -2025,7 +2030,7 @@ body::before {
           <td class="td-center"><span class="cell-yes">Yes</span></td>
           <td class="td-center"><span class="cell-yes">Yes</span></td>
           <td class="td-center"><span class="cell-yes">Yes</span></td>
-          <td class="td-center"><span class="cell-yes">Yes</span></td>
+          <td class="td-center"><span class="cell-partial">Mock KYT</span></td>
         </tr>
       </tbody>
     </table>
@@ -2076,7 +2081,7 @@ body::before {
   <section class="slide" data-section="Compliance Fit">
     <div class="slide-title-block">
       <div class="eyebrow">§12 · Compliance fit</div>
-      <h2 class="display display-md">Each obligation maps to a <em>specific product primitive</em>.</h2>
+      <h2 class="display display-md">Potential applications. <em>No compliance certification is claimed.</em></h2>
     </div>
 
     <table class="fit-table">
@@ -2094,7 +2099,7 @@ body::before {
             <span class="desc">ICT resilience, order records, suitability</span>
           </td>
           <td class="fit-arrow">→</td>
-          <td class="fit-feature">HSM / TEE policy engine + memo-anchored decision log.</td>
+          <td class="fit-feature">Memo-anchored receipt export. HSM / TEE isolation remains future work.</td>
         </tr>
         <tr>
           <td class="fit-obligation">
@@ -2102,7 +2107,7 @@ body::before {
             <span class="desc">Non-delegable management accountability</span>
           </td>
           <td class="fit-arrow">→</td>
-          <td class="fit-feature"><strong>Human escalation tier</strong> — over-threshold trades require a named approver; the human signature is recorded on-chain alongside the transaction.</td>
+          <td class="fit-feature"><strong>Human escalation tier</strong> — over-threshold trades require a local operator action recorded in the receipt. Operator identity and human co-signatures are not implemented.</td>
         </tr>
         <tr>
           <td class="fit-obligation">
@@ -2110,7 +2115,7 @@ body::before {
             <span class="desc">Human oversight + "stop button"</span>
           </td>
           <td class="fit-arrow">→</td>
-          <td class="fit-feature">Emergency-freeze signer — a single <strong>SignerListSet</strong> revokes the agent.</td>
+          <td class="fit-feature">Local operator approval or rejection for escalations. An independent emergency-freeze signer is not implemented.</td>
         </tr>
         <tr>
           <td class="fit-obligation">
@@ -2118,7 +2123,7 @@ body::before {
             <span class="desc">No personal data on-chain</span>
           </td>
           <td class="fit-arrow">→</td>
-          <td class="fit-feature">Hashes on-chain; full trace in WORM; selective disclosure.</td>
+          <td class="fit-feature">Receipt commitments on-chain; local receipt export. WORM and selective disclosure remain roadmap items.</td>
         </tr>
         <tr>
           <td class="fit-obligation">
@@ -2126,7 +2131,7 @@ body::before {
             <span class="desc">Strict liability, presumption of defect</span>
           </td>
           <td class="fit-arrow">→</td>
-          <td class="fit-feature">Attestation trail = <strong>defendable evidence of reasonable care</strong>.</td>
+          <td class="fit-feature">Receipt verification checks integrity against a supplied anchor. It does not establish legal compliance or reasonable care.</td>
         </tr>
       </tbody>
     </table>
@@ -2153,14 +2158,14 @@ body::before {
         <div class="limit-num">L02</div>
         <div>
           <div class="limit-head">The policy engine is a high-value target.</div>
-          <div class="limit-body">Formal verification, fuzz testing, redundant invariants, and a separate high-threshold human multisig with time-lock for any policy change.</div>
+          <div class="limit-body">Both keys currently share one backend process. Formal verification, isolated signers and independent authorization for policy changes remain future work.</div>
         </div>
       </div>
       <div class="limit-item">
         <div class="limit-num">L03</div>
         <div>
-          <div class="limit-head">XRPL Hooks and Smart Escrows are not yet live.</div>
-          <div class="limit-body">On-chain rule expressiveness is constrained. The policy engine therefore lives off-chain in HSM / TEE infrastructure and leverages existing primitives.</div>
+          <div class="limit-head">The ledger does not evaluate the policy.</div>
+          <div class="limit-body">Policy evaluation happens in the local backend. XRPL enforces its configured signing requirement; HSM / TEE infrastructure is not part of this demo.</div>
         </div>
       </div>
     </div>
@@ -2248,7 +2253,7 @@ body::before {
   <section class="slide" data-section="Demo">
     <div class="slide-title-block">
       <div class="eyebrow">§16 · Live on XRPL testnet</div>
-      <h2 class="display display-md">Three scenarios. Real LLM, real multisig, <em>real settled transactions</em>.</h2>
+      <h2 class="display display-md">Three scenarios. Real LLM, native multisig, <em>observed testnet outcomes</em>.</h2>
     </div>
 
     <div class="demo-grid">
@@ -2257,35 +2262,35 @@ body::before {
         <div class="demo-title">Rebalance<br>→ 500 XRP to treasury</div>
         <ol class="demo-steps">
           <li><span class="step-n">01</span><span>LLM emits typed <code style="font-family:var(--font-mono);color:var(--ink);">submit_payment</code> tool-call.</span></li>
-          <li><span class="step-n">02</span><span>All 5 rules pass. Merkle root committed.</span></li>
+          <li><span class="step-n">02</span><span>If policy checks pass, a canonical receipt is committed.</span></li>
           <li><span class="step-n">03</span><span>key_a + key_b multisign; submit.</span></li>
-          <li><span class="step-n">04</span><span>rippled validates quorum, settles.</span></li>
+          <li><span class="step-n">04</span><span>UI reports the validated ledger result, or an unknown outcome.</span></li>
         </ol>
-        <div class="demo-outcome outcome-pass">tesSUCCESS · memo: reasoningCommit</div>
+        <div class="demo-outcome outcome-pass">Validated success · memo: signet/payment-receipt/v1</div>
       </div>
 
       <div class="demo-card card-fail">
         <div class="demo-tag">Scenario B · Jailbreak</div>
         <div class="demo-title">Prompt injection<br>→ attacker drain attempt</div>
         <ol class="demo-steps">
-          <li><span class="step-n">01</span><span>gpt-3.5 obeys injection: 10 000 XRP to attacker address.</span></li>
-          <li><span class="step-n">02</span><span>allowlist_destination fails → policy refuses to sign.</span></li>
-          <li><span class="step-n">03</span><span>Agent submits alone (demo forces single-sig).</span></li>
-          <li><span class="step-n">04</span><span>Protocol rejects: below quorum weight.</span></li>
+          <li><span class="step-n">01</span><span>Prompt attempts to redirect funds; the model's actual proposal may vary.</span></li>
+          <li><span class="step-n">02</span><span>An unapproved destination causes a policy refusal.</span></li>
+          <li><span class="step-n">03</span><span>The injection demo attempts a single-signature submission after refusal.</span></li>
+          <li><span class="step-n">04</span><span>UI reports the returned engine code; uncertainty is not shown as rejection.</span></li>
         </ol>
-        <div class="demo-outcome outcome-fail">tefBAD_QUORUM · funds never move</div>
+        <div class="demo-outcome outcome-fail">Protected treasury requires both signatures</div>
       </div>
 
       <div class="demo-card card-human">
         <div class="demo-tag">Scenario C · Escalation</div>
         <div class="demo-title">Large legitimate trade<br>→ 5 000 XRP · over threshold</div>
         <ol class="demo-steps">
-          <li><span class="step-n">01</span><span>Notional &gt; $1 000 tier → no auto co-sign.</span></li>
+          <li><span class="step-n">01</span><span>USD notional above the configured cap requires approval.</span></li>
           <li><span class="step-n">02</span><span>SSE event routes to human-approval UI.</span></li>
-          <li><span class="step-n">03</span><span>Operator clicks Approve → AI-Act Art. 14 stop-button in reverse.</span></li>
-          <li><span class="step-n">04</span><span>Both keys sign; ledger settles.</span></li>
+          <li><span class="step-n">03</span><span>Local approval refreshes the quote and integrity checks before signing.</span></li>
+          <li><span class="step-n">04</span><span>Both backend keys sign; UI reports the actual ledger outcome.</span></li>
         </ol>
-        <div class="demo-outcome outcome-human">escalated → approved → tesSUCCESS</div>
+        <div class="demo-outcome outcome-human">escalated → operator decision → observed outcome</div>
       </div>
     </div>
 
@@ -2295,14 +2300,14 @@ body::before {
         <ul class="demo-stack-list">
           <li>FastAPI + SSE <span>— hexagonal domain, zero I/O in core</span></li>
           <li>xrpl-py 4.5 · SignerListSet 2-of-2 <span>— testnet</span></li>
-          <li>OpenAI tool-calling <span>— gpt-3.5-turbo, jailbreakable on purpose</span></li>
+          <li>OpenAI tool-calling <span>— gpt-3.5-turbo, injection outcome varies</span></li>
           <li>Vite + React + framer-motion <span>— live event stream</span></li>
         </ul>
       </div>
       <div>
         <div class="demo-footer-label">Evidence</div>
         <div class="demo-footer-body">
-          29 passing domain tests · 5 policy rules · SHA-256 Merkle commitment landed in XRPL memo · explorer-linkable tx hashes for A &amp; C.
+          Offline domain, wallet, application and UI regression tests · versioned receipt commitments in XRPL memos · actual ledger outcomes and explorer links.
         </div>
       </div>
       <div>
