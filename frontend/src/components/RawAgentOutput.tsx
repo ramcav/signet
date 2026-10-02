@@ -17,7 +17,7 @@ export function RawAgentOutput({
       </div>
       <p className="text-xs text-muted mb-3">
         Raw arguments from the LLM's <span className="font-mono">submit_payment</span> tool call. In
-        scenario B, the injection flips this to an attacker destination.
+        scenario B, the injection attempts to redirect the payment. The actual response appears below.
       </p>
       {thinking && !raw && (
         <div className="flex items-center gap-3 text-sm text-muted">

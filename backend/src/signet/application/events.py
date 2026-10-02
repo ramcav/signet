@@ -45,8 +45,16 @@ class EventBus:
         cursor = last_event_id or 0
         while True:
             async with self._condition:
+                reset = None
                 if cursor > self._next_id:
-                    cursor = 0  # the server was restarted
+                    reset = Event(type="stream.reset", run_id="", data={"reason": "restart"})
+                    cursor = 0
+                elif self._history and last_event_id is not None and cursor < self._history[0].id - 1:
+                    reset = Event(type="stream.reset", run_id="", data={"reason": "history_expired"})
+                    cursor = self._history[0].id - 1
+            if reset:
+                yield reset
+            async with self._condition:
                 await self._condition.wait_for(lambda: self._next_id > cursor)
                 batch = [event for event in self._history if event.id > cursor]
             for event in batch:

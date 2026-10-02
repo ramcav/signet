@@ -1,204 +1,90 @@
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import type { RunState } from "../state";
 
 type NodeState = "idle" | "active" | "pass" | "fail";
+interface PipelineNode { key: string; label: string; sublabel: string; state: NodeState; detail: string }
 
-interface Node {
-  key: string;
-  label: string;
-  sublabel: string;
-  state: NodeState;
-  detail?: string;
-}
-
-function derivePipeline(state: RunState): Node[] {
+function derivePipeline(state: RunState): PipelineNode[] {
   const hasMessage = !!state.userMessage;
-  const thinking = state.thinking;
   const hasIntent = !!state.intent;
-  const compromised = hasIntent && !!state.refused;
-  const rulesStarted = state.rules.length > 0;
-  const rulesDone = state.merkleRoot != null;
-  const refused = !!state.refused;
-  const escalate = !!state.escalation && state.escalationStatus !== "approved";
-  const ledgerPhase = state.ledger.phase;
-
-  const user: Node = {
-    key: "user",
-    label: "Operator",
-    sublabel: "intent",
-    state: hasMessage ? (hasIntent ? "pass" : "active") : "idle",
-    detail: hasMessage ? "message dispatched" : "awaiting",
+  const user: PipelineNode = {
+    key: "user", label: "Operator", sublabel: "intent", state: hasMessage ? hasIntent ? "pass" : "active" : "idle", detail: hasMessage ? "message dispatched" : "awaiting",
   };
-
-  let agentState: NodeState = "idle";
-  let agentDetail = "standby";
-  if (thinking) {
-    agentState = "active";
-    agentDetail = "LLM thinking…";
-  } else if (compromised) {
-    agentState = "fail";
-    agentDetail = "compromised output";
-  } else if (hasIntent) {
-    agentState = "pass";
-    agentDetail = "intent emitted";
+  const agent: PipelineNode = {
+    key: "agent", label: "Agent", sublabel: "key_a",
+    state: state.thinking ? "active" : hasIntent ? "pass" : state.error ? "fail" : "idle",
+    detail: state.thinking ? "preparing intent..." : hasIntent ? "intent emitted" : state.error ? "run interrupted" : "standby",
+  };
+  const policy: PipelineNode = { key: "policy", label: "Policy", sublabel: "key_b", state: "idle", detail: "standby" };
+  if (state.refused || state.escalationStatus === "rejected") {
+    policy.state = "fail";
+    policy.detail = state.escalationStatus === "rejected" ? "operator rejected" : "refused to sign";
+  } else if (state.escalationStatus === "pending") {
+    policy.state = "active";
+    policy.detail = "awaiting operator approval";
+  } else if (state.escalationStatus === "approved") {
+    policy.state = "pass";
+    policy.detail = "operator approved";
+  } else if (state.escalationStatus === "expired") {
+    policy.state = "fail";
+    policy.detail = "approval request expired";
+  } else if (state.rules.length > 0 && state.rules.every((rule) => rule.passed) && state.merkleRoot) {
+    policy.state = "pass";
+    policy.detail = "policy checks passed";
+  } else if (state.rules.length > 0) {
+    policy.state = "active";
+    policy.detail = `evaluating (${state.rules.length} checked)`;
   }
-  const agent: Node = {
-    key: "agent",
-    label: "Agent",
-    sublabel: "key_a",
-    state: agentState,
-    detail: agentDetail,
-  };
-
-  let policyState: NodeState = "idle";
-  let policyDetail = "standby";
-  if (refused) {
-    policyState = "fail";
-    policyDetail = "refused to sign";
-  } else if (escalate) {
-    policyState = "active";
-    policyDetail = "escalated to human";
-  } else if (rulesDone) {
-    policyState = "pass";
-    policyDetail = "all rules passed";
-  } else if (rulesStarted) {
-    policyState = "active";
-    policyDetail = `evaluating (${state.rules.length}/5)`;
-  }
-  const policy: Node = {
-    key: "policy",
-    label: "Policy",
-    sublabel: "key_b",
-    state: policyState,
-    detail: policyDetail,
-  };
-
-  let ledgerState: NodeState = "idle";
-  let ledgerDetail = "standby";
-  if (ledgerPhase === "submitting") {
-    ledgerState = "active";
-    ledgerDetail = "submitting…";
-  } else if (ledgerPhase === "settled") {
-    ledgerState = "pass";
-    ledgerDetail = "tesSUCCESS";
-  } else if (ledgerPhase === "single_sig_failed") {
-    ledgerState = "fail";
-    ledgerDetail = state.ledger.result?.engine_result || "rejected";
-  }
-  const ledger: Node = {
-    key: "ledger",
-    label: "XRPL",
-    sublabel: "testnet",
-    state: ledgerState,
-    detail: ledgerDetail,
-  };
-
+  const ledger: PipelineNode = { key: "ledger", label: "XRPL", sublabel: "testnet", state: "idle", detail: "standby" };
+  const current = state.ledger;
+  const result = current.phase === "single_sig_failed" ? current.result : "tx" in current ? current.tx : null;
+  if (result) {
+    const success = result.outcome === "success" && result.validated && result.engine_result === "tesSUCCESS";
+    ledger.state = success ? "pass" : result.outcome === "unknown" || result.outcome === "success" ? "active" : "fail";
+    ledger.detail = !success && (result.outcome === "unknown" || result.outcome === "success")
+      ? `Outcome unknown${result.engine_result ? ` · ${result.engine_result}` : ""}`
+      : result.engine_result || "attempt failed";
+  } else if (current.phase === "submitting") {
+    ledger.state = "active";
+    ledger.detail = "submitting...";
+  } else if (state.refused || state.escalationStatus === "rejected") ledger.detail = "not submitted";
   return [user, agent, policy, ledger];
 }
 
-const nodeColors: Record<NodeState, { border: string; dot: string; text: string; glow: string }> = {
-  idle:   { border: "border-border",  dot: "bg-border",  text: "text-muted",        glow: "" },
-  active: { border: "border-accent",  dot: "bg-accent",  text: "text-accent",       glow: "shadow-[0_0_0_3px_rgba(217,119,87,0.12)]" },
-  pass:   { border: "border-pass",    dot: "bg-pass",    text: "text-pass",         glow: "shadow-[0_0_0_3px_rgba(127,176,105,0.12)]" },
-  fail:   { border: "border-fail",    dot: "bg-fail",    text: "text-fail",         glow: "shadow-[0_0_0_3px_rgba(226,109,90,0.12)]" },
+const nodeColors: Record<NodeState, { border: string; dot: string; text: string }> = {
+  idle: { border: "border-border", dot: "bg-border", text: "text-muted" },
+  active: { border: "border-accent", dot: "bg-accent", text: "text-accent" },
+  pass: { border: "border-pass", dot: "bg-pass", text: "text-pass" },
+  fail: { border: "border-fail", dot: "bg-fail", text: "text-fail" },
 };
-
-function Connector({ from, to }: { from: NodeState; to: NodeState }) {
-  // Arrow "flows" only while data is transiting: one side active, the other
-  // not yet terminal. Once both sides are terminal (pass/fail) or both idle,
-  // it's a static line.
-  const flowing = from === "active" || to === "active";
-  const color =
-    from === "fail" || to === "fail"
-      ? "stroke-fail"
-      : from === "pass" && to === "pass"
-      ? "stroke-pass"
-      : flowing
-      ? "stroke-accent"
-      : "stroke-border";
-  return (
-    <div className="flex-1 mx-2 min-w-[40px]">
-      <svg
-        viewBox="0 0 100 20"
-        preserveAspectRatio="none"
-        className="w-full h-5 overflow-visible"
-      >
-        <line x1="0" y1="10" x2="100" y2="10" className={`${color} opacity-40`} strokeWidth="2" strokeLinecap="round" />
-        {flowing && (
-          <motion.line
-            x1="0"
-            y1="10"
-            x2="100"
-            y2="10"
-            className={color}
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeDasharray="4 6"
-            initial={{ strokeDashoffset: 100 }}
-            animate={{ strokeDashoffset: 0 }}
-            transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}
-          />
-        )}
-        <polygon
-          points="100,10 94,6 94,14"
-          className={`fill-current ${color.replace("stroke-", "text-")}`}
-        />
-      </svg>
-    </div>
-  );
-}
-
-function NodeCard({ node }: { node: Node }) {
-  const c = nodeColors[node.state];
-  const pulse =
-    node.state === "active"
-      ? { scale: [1, 1.015, 1] }
-      : { scale: 1 };
-  return (
-    <motion.div
-      layout
-      animate={pulse}
-      transition={{ duration: 1.4, repeat: node.state === "active" ? Infinity : 0 }}
-      className={`flex-none w-[180px] border ${c.border} ${c.glow} rounded-lg px-4 py-3 bg-bg transition-colors duration-300`}
-    >
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="font-display text-base leading-none">{node.label}</div>
-          <div className="font-mono text-[10px] text-muted mt-1">{node.sublabel}</div>
-        </div>
-        <motion.span
-          className={`w-2.5 h-2.5 rounded-full ${c.dot}`}
-          animate={node.state === "active" ? { opacity: [0.4, 1, 0.4] } : { opacity: 1 }}
-          transition={{ duration: 1.2, repeat: node.state === "active" ? Infinity : 0 }}
-        />
-      </div>
-      <div className={`mt-3 text-[11px] font-mono ${c.text}`}>{node.detail}</div>
-    </motion.div>
-  );
-}
 
 export function PipelineDiagram({ state }: { state: RunState }) {
   const nodes = derivePipeline(state);
+  const reducedMotion = useReducedMotion();
   return (
-    <div className="border border-border rounded-lg p-5 bg-bg/60">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="font-display text-lg leading-none">Pipeline</h2>
-          <p className="text-[11px] text-muted mt-1">
-            operator → agent signs (key_a) → policy engine co-signs (key_b) → XRPL settles
-          </p>
-        </div>
+    <section className="min-w-0 border border-border rounded-lg p-4 sm:p-5 bg-bg/60" aria-labelledby="pipeline-title">
+      <div className="mb-4">
+        <h2 id="pipeline-title" className="font-display text-lg leading-none">Pipeline</h2>
+        <p className="text-[11px] text-muted mt-1">Operator → agent intent → policy evaluation → XRPL result</p>
       </div>
-      <div className="flex items-center">
-        {nodes.map((n, i) => (
-          <div key={n.key} className="flex items-center flex-1 last:flex-none min-w-0">
-            <NodeCard node={n} />
-            {i < nodes.length - 1 && (
-              <Connector from={n.state} to={nodes[i + 1].state} />
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
+      <ol className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+        {nodes.map((node, index) => {
+          const colors = nodeColors[node.state];
+          const animate = node.state === "active" && !reducedMotion;
+          return (
+            <li key={node.key} className={`min-w-0 border ${colors.border} rounded-lg px-4 py-3 bg-bg`}>
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <div className="font-display text-base leading-none"><span className="text-muted text-xs mr-2">{index + 1}</span>{node.label}</div>
+                  <div className="font-mono text-[10px] text-muted mt-1">{node.sublabel}</div>
+                </div>
+                <motion.span aria-hidden="true" className={`shrink-0 w-2.5 h-2.5 rounded-full ${colors.dot}`} animate={animate ? { opacity: [0.4, 1, 0.4] } : { opacity: 1 }} transition={{ duration: reducedMotion ? 0 : 1.2, repeat: animate ? Infinity : 0 }} />
+              </div>
+              <div className={`mt-3 text-[11px] font-mono break-words ${colors.text}`}>{node.detail}</div>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
   );
 }

@@ -80,3 +80,20 @@ def test_invalid_request_does_not_start_run(api):
     assert client.post("/intents", json={"user_message": ""}).status_code == 422
     assert client.post("/intents", json={"user_message": "send", "run_id": "../bad"}).status_code == 422
     assert calls == []
+
+
+def test_run_snapshot_restores_receipt_and_pending_approval(api):
+    client, services, _ = api
+    services.store.accept_run("snapshot_run", {"user_message": "send"})
+    services.store.finish_run("snapshot_run", "escalate")
+    receipt = {"root": "abc", "payload": {"evaluation": {"decision": "escalate"}}}
+    services.store.save_receipt("snapshot_run", receipt)
+    services.approve.escalations = SimpleNamespace(pending={
+        "approval-id": SimpleNamespace(run_id="snapshot_run"),
+    })
+    snapshot = client.get("/runs/snapshot_run").json()
+    assert snapshot["receipt"] == receipt
+    assert snapshot["escalation_id"] == "approval-id"
+    assert snapshot["status"] == "escalate"
+    services.approve.escalations.pending.clear()
+    assert client.get("/runs/snapshot_run").json()["escalation_id"] is None

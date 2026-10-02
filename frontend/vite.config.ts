@@ -12,6 +12,7 @@ export default defineConfig({
       "/escalations": backend,
       "/events": { target: backend, changeOrigin: true },
       "/health": backend,
+      "/runs": backend,
     },
   },
 });

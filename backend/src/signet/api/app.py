@@ -144,10 +144,14 @@ def build_app(services: Services | None = None) -> FastAPI:
         return {"run_id": run_id, "status": "accepted"}
 
     @app.get("/runs/{run_id}")
-    def get_run(run_id: str):
+    async def get_run(run_id: str):
         run = current().store.get_run(run_id)
         if run is None:
             raise HTTPException(status_code=404, detail="unknown run")
+        run["receipt"] = current().store.get_receipt(run_id)
+        registry = getattr(current().approve, "escalations", None)
+        run["escalation_id"] = next((key for key, pending in registry.pending.items()
+                                     if pending.run_id == run_id), None) if registry else None
         return run
 
     @app.get("/runs/{run_id}/receipt")

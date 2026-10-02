@@ -13,6 +13,11 @@ body {
   color: #f2ede4;
 }
 
+:focus-visible {
+  outline: 2px solid #d97757;
+  outline-offset: 3px;
+}
+
 /* subtle scrollbars */
 ::-webkit-scrollbar {
   width: 8px;
@@ -40,4 +45,15 @@ body {
   height: 14px;
   animation: spin 0.8s linear infinite;
   display: inline-block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
