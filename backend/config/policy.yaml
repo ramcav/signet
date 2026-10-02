@@ -1,9 +1,8 @@
+version: "1"
 allowlist_destinations:
   - rTreasuryVaultXXXXXXXXXXXXXXXXXXXXXXXX
-  - rRLUSDIssuerXXXXXXXXXXXXXXXXXXXXXXXXXX
 allowlist_assets:
   - XRP
-  - RLUSD
 per_tx_cap_usd: 25000
 daily_cap_usd: 100000
 sanctions_source: mock

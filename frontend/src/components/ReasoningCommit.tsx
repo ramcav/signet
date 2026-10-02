@@ -17,13 +17,13 @@ export function ReasoningCommit({
     <motion.div
       layout
       className={
-        "border rounded-lg px-4 py-3 flex items-center justify-between transition-colors duration-300 " +
+        "border rounded-lg px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 transition-colors duration-300 " +
         (active ? "border-accent/70 bg-accent/5" : "border-dashed border-border/60")
       }
     >
       <div className="min-w-0">
         <div className="text-[10px] font-mono uppercase tracking-wider text-muted">
-          reasoning commit
+          payment receipt commitment
         </div>
         <div className="font-mono text-sm mt-1 text-fg">
           {active ? (
@@ -42,8 +42,8 @@ export function ReasoningCommit({
           )}
         </div>
       </div>
-      <div className="text-[10px] font-mono uppercase tracking-wider text-muted whitespace-nowrap ml-4">
-        {active ? `${stepCount} steps` : "Merkle(…)"}
+      <div className="text-[10px] font-mono uppercase tracking-wider text-muted whitespace-nowrap sm:ml-4">
+        {active ? `${stepCount ?? 0} evidence steps` : "SHA-256"}
       </div>
     </motion.div>
   );

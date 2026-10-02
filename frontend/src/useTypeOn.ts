@@ -6,9 +6,21 @@ import { useEffect, useState } from "react";
  */
 export function useTypeOn(full: string | null | undefined, msPerChar = 8): string {
   const [shown, setShown] = useState("");
+  const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  useEffect(() => {
+    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setReducedMotion(preference.matches);
+    update();
+    preference.addEventListener("change", update);
+    return () => preference.removeEventListener("change", update);
+  }, []);
   useEffect(() => {
     if (!full) {
       setShown("");
+      return;
+    }
+    if (reducedMotion) {
+      setShown(full);
       return;
     }
     setShown("");
@@ -19,6 +31,6 @@ export function useTypeOn(full: string | null | undefined, msPerChar = 8): strin
       if (i >= full.length) window.clearInterval(id);
     }, msPerChar);
     return () => window.clearInterval(id);
-  }, [full, msPerChar]);
-  return shown;
+  }, [full, msPerChar, reducedMotion]);
+  return reducedMotion ? full ?? "" : shown;
 }

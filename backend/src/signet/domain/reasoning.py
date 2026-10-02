@@ -1,4 +1,4 @@
-"""ReasoningTrace + MerkleCommit — canonical commitment to agent reasoning."""
+"""Recorded evidence and unambiguous commitments; not private model reasoning."""
 from __future__ import annotations
 
 import hashlib
@@ -19,13 +19,14 @@ class MerkleCommit:
     def from_steps(cls, steps: Sequence[str]) -> "MerkleCommit":
         if not steps:
             raise ValueError("cannot commit empty trace")
-        leaves = [_h(s.encode("utf-8")) for s in steps]
+        leaves = [_h(b"signet:trace:leaf:v1\0" + s.encode("utf-8")) for s in steps]
         level = list(leaves)
         while len(level) > 1:
             if len(level) % 2 == 1:
                 level.append(level[-1])
-            level = [_h(level[i] + level[i + 1]) for i in range(0, len(level), 2)]
-        return cls(root=level[0].hex(), leaves=tuple(leaf.hex() for leaf in leaves))
+            level = [_h(b"signet:trace:node:v1\0" + level[i] + level[i + 1]) for i in range(0, len(level), 2)]
+        root = _h(b"signet:trace:root:v1\0" + len(leaves).to_bytes(8, "big") + level[0])
+        return cls(root=root.hex(), leaves=tuple(leaf.hex() for leaf in leaves))
 
 
 @dataclass(frozen=True)

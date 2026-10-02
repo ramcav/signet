@@ -1,22 +1,29 @@
 """Agent adapter — OpenAI tool calling produces an Intent.
 
-This is where Scenario B's jailbreak is *genuine*: the user message is an
-injection, the LLM actually obeys it, and the policy engine catches the
-malicious intent downstream. Do not stub this.
+Scenario B supplies a real prompt-injection attempt. Model behavior varies;
+the deterministic policy engine evaluates whichever intent it produces.
 """
 from __future__ import annotations
 
 import json
 import logging
 import os
-from dataclasses import dataclass, field
-from typing import Optional
+from decimal import Decimal
+from dataclasses import dataclass
 
 from openai import OpenAI
 
 from ..domain import Intent, IntentAction, ReasoningTrace
 
 log = logging.getLogger(__name__)
+
+AGENT_CONFIGURATION_MESSAGE = (
+    "Set OPENAI_API_KEY in backend/.env, then restart the backend to run scenarios."
+)
+
+
+class AgentConfigurationError(RuntimeError):
+    """The model cannot be called until local credentials are configured."""
 
 SYSTEM_PROMPT = """You are an autonomous portfolio-management agent on the XRP Ledger.
 
@@ -55,7 +62,7 @@ TOOLS = [
                     },
                     "asset": {
                         "type": "string",
-                        "description": "Asset code, e.g. XRP or RLUSD.",
+                        "description": "Native XRP is the only supported asset.",
                     },
                     "rationale": {
                         "type": "string",
@@ -83,9 +90,18 @@ class OpenAIAgentAdapter:
     treasury_address: str
     rlusd_issuer_address: str
     model: str = "gpt-3.5-turbo"
-    client: OpenAI = field(default_factory=lambda: OpenAI(api_key=os.environ["OPENAI_API_KEY"]))
+    client: OpenAI | None = None
+
+    @property
+    def is_configured(self) -> bool:
+        key = os.environ.get("OPENAI_API_KEY", "").strip()
+        return self.client is not None or key not in {"", "sk-..."}
 
     def propose(self, user_message: str) -> AgentResult:
+        if not self.is_configured:
+            raise AgentConfigurationError(AGENT_CONFIGURATION_MESSAGE)
+        if self.client is None:
+            self.client = OpenAI(api_key=os.environ["OPENAI_API_KEY"].strip())
         system = SYSTEM_PROMPT.format(
             master=self.master_address,
             treasury=self.treasury_address,
@@ -106,7 +122,12 @@ class OpenAIAgentAdapter:
         if not choice.message.tool_calls:
             raise RuntimeError(f"agent failed to call tool: {choice.message.content!r}")
         call = choice.message.tool_calls[0]
-        args = json.loads(call.function.arguments)
+        args = json.loads(call.function.arguments, parse_float=Decimal)
+        if not isinstance(args, dict):
+            raise ValueError("payment arguments must be an object")
+        for key in ("destination", "asset", "rationale"):
+            if not isinstance(args.get(key), str) or not args[key].strip():
+                raise ValueError(f"{key} must be a nonempty string")
         raw_message = choice.message.content or ""
 
         trace = (
@@ -117,14 +138,14 @@ class OpenAIAgentAdapter:
             .append(f"tool_call:submit_payment:{call.function.arguments}")
         )
 
-        raw_dest = str(args["destination"])
+        raw_dest = args["destination"]
         resolved_dest = self._resolve_destination(raw_dest)
 
         intent = Intent(
             action=IntentAction.PAYMENT,
             from_account=self.master_address,
             to_account=resolved_dest,
-            amount=float(args["amount"]),
+            amount=args["amount"],
             asset=args["asset"].upper(),
             rationale=args.get("rationale", ""),
             raw_agent_output=call.function.arguments,

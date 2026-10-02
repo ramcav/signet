@@ -8,6 +8,7 @@ from .policy import (
     Decision,
 )
 from .reasoning import ReasoningTrace, MerkleCommit
+from .receipt import PaymentReceipt, build_receipt, verify_receipt
 
 __all__ = [
     "Intent",
@@ -20,4 +21,7 @@ __all__ = [
     "Decision",
     "ReasoningTrace",
     "MerkleCommit",
+    "PaymentReceipt",
+    "build_receipt",
+    "verify_receipt",
 ]

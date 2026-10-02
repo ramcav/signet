@@ -5,8 +5,11 @@ __pycache__/
 node_modules/
 dist/
 build/
+*.tsbuildinfo
+.ruff_cache/
+backend/data/
 .env
 .env.local
 
-# Demo-only wallet seeds — regenerate with scripts/fund_wallets.py
+# Local testnet recovery material; setup never overwrites an existing file.
 backend/config/wallets.json

@@ -1,6 +1,6 @@
 import pytest
 
-from signet.domain import ReasoningTrace, MerkleCommit
+from signet.domain import ReasoningTrace
 
 
 def test_commit_deterministic():
@@ -28,9 +28,7 @@ def test_commit_empty_raises():
         ReasoningTrace().commit()
 
 
-def test_odd_leaves_duplicates_last():
-    # Known-shape check: root for ("a","b","c") != root for ("a","b","c","c")'s raw concat,
-    # but duplicating the last leaf before hashing should produce the same root both ways.
+def test_leaf_count_is_bound_by_commitment():
     same = ReasoningTrace(steps=("a", "b", "c")).commit()
     dup = ReasoningTrace(steps=("a", "b", "c", "c")).commit()
-    assert same.root == dup.root
+    assert same.root != dup.root

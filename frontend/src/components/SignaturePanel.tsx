@@ -10,7 +10,7 @@ export function SignaturePanel({
   policyRefused: boolean;
 }) {
   return (
-    <section className="grid grid-cols-2 gap-4">
+    <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <SigCard label="Agent" sub="key_a" active={agentSigned} />
       <SigCard
         label="Policy"
