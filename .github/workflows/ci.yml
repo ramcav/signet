@@ -18,7 +18,7 @@ jobs:
         working-directory: backend
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v6
         with:
           python-version: ${{ matrix.python }}
           working-directory: backend
